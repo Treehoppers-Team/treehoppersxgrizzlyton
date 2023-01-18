@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 TELE_TOKEN_TEST = os.getenv('TELEGRAM_TOKEN')
-PROVIDER_TOKEN = os.getenv('TEST_TOKEN')
+PROVIDER_TOKEN = os.getenv('TEST_PAYMENT_TOKEN')
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -21,13 +21,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-EVENT, FINALIZE, SHARE = range(3)
+# EVENT, FINALIZE, SHARE = range(3)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "/payment - Make payment for this service\n"
-        "/event - Create a new Event \n"
-        "/viewEvents - View all the Events created",
+        "/viewEvents - View all ongoing events\n"
+        "/register - Register for an ongoing event \n"
+        "/checkRegistration - View registration status (pending/successful/unsuccessful) for an event \n"
+        "/makePayment - Pay for the ticket for an event that you have successfully registered for \n"
+        "/redeem - Redeem your ticket at the event venue"
         )
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -68,99 +70,22 @@ async def successful_payment(update: Update, context: ContextTypes.DEFAULT_TYPE)
     # Send payment info to endpoint for storage on firebase
     await update.message.reply_text("Thank you for your payment!")
 
-"""""
-=============================================================================================
-These are the functions to create an event
-event: Prompts the user to provide necessary details for the event
-finalize: Prompts the user to confirm the event details
-share: Create a shareable link with the event details for the client
-=============================================================================================
-"""
-
-async def event(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Hi, please provide your event details in the following format: \n\n"
-        "Title : Description : Venue : Time"
-    )
-    return FINALIZE
-
-async def finalize(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_response = update.message.text
-    title = user_response.split(' : ')[0]
-    description = user_response.split(' : ')[1]
-    venue = user_response.split(' : ')[2]
-    time = user_response.split(' : ')[3]
-
-    context.user_data['title'] = title
-    context.user_data['description'] = description
-    context.user_data['venue'] = venue
-    context.user_data['time'] = time
-
-    reply_keyboard = [["Yes", "No"]]
-
-    await update.message.reply_text(
-        "Thanks for your input! This is the event that you created: \n\n"
-        f"Event Title:  {title} \n"
-        f"Event Description:  {description} \n"
-        f"Event Venue:  {venue} \n"
-        f"Event Time:  {time} \n\n"
-        "Do you confirm that these details are correct?", 
-        reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard, one_time_keyboard=True, input_field_placeholder="Yes/No"
-        ),
-    )
-    return SHARE
-
-async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_response = update.message.text
-
-    if user_response == "No":
-        reply_keyboard = [["Yes"]]
-        await update.message.reply_text(
-            "Do You want to edit the event details?",
-            reply_markup=ReplyKeyboardMarkup(
-                reply_keyboard, one_time_keyboard=True, input_field_placeholder="Yes"
-            ),
-        )
-        return EVENT
-
-    else:
-        title =  context.user_data['title']
-        description =  context.user_data['description']
-        venue =  context.user_data['venue']
-        time =  context.user_data['time']
-
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id, 
-            text="Here is the event info for sharing: \n\n"
-            f"Event Title:  {title} \n"
-            f"Event Description:  {description} \n"
-            f"Event Venue:  {venue} \n"
-            f"Event Time:  {time} \n\n"
-        )
-        return ConversationHandler.END
-
 if __name__ == '__main__':
     application = ApplicationBuilder().token(TELE_TOKEN_TEST).build()
     
     conversation_handler = ConversationHandler(
     entry_points=[
         CommandHandler('start', start),
-        CommandHandler('payment',make_payment),
-        CommandHandler('event', event),
         ],
     states={
-        EVENT:  [MessageHandler(filters.Regex("^(Yes)$"), event)],
-        FINALIZE: [MessageHandler(filters.Regex("^(.*):(.*):(.*):(.*)"), finalize)],
-        SHARE: [MessageHandler(filters.Regex("^(Yes|No)$"), share)], 
+        # EVENT:  [MessageHandler(filters.Regex("^(Yes)$"), event)],
     },
     fallbacks=[CommandHandler('cancel', cancel)]
 )
-    application.add_handler(conversation_handler)
-
     application.add_handler(PreCheckoutQueryHandler(precheckout))
     application.add_handler(
         MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment)
     )
+    application.add_handler(conversation_handler)
     
     application.run_polling()
