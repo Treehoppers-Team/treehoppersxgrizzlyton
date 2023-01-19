@@ -1,11 +1,13 @@
 import logging
+import json
+import requests
 from telegram import (
-    Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, LabeledPrice
+    Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, LabeledPrice,
 )
 from telegram.ext import (
     ApplicationBuilder, ContextTypes, CommandHandler, 
     ConversationHandler, MessageHandler, StringCommandHandler,
-    filters, PreCheckoutQueryHandler
+    filters, PreCheckoutQueryHandler,
 )
 import os
 from dotenv import load_dotenv
@@ -21,7 +23,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# EVENT, FINALIZE, SHARE = range(3)
+REGISTER = range(1)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -33,59 +35,76 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    update.message.reply_text('Conversation cancelled.')
+    await update.message.reply_text('Thank you for visiting the ticketing bot')
     return ConversationHandler.END
 
-"""""
-=============================================================================================
-These are the functions for clients to make payments
-make_payment: Send an invoice with the product info & price to the user
-precheckout: Verify payload and validity of transaction (10s leeway)
-successful_payment: Additional logic after payment has been confirmed
-=============================================================================================
-"""
-async def make_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_invoice(
+async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_message(
         chat_id=update.effective_chat.id, 
-        title="Community Tool Subscription", 
-        description="A platform for generating events for your projects and publicizing them to users", 
-        payload="Custom-Payload", 
-        provider_token=PROVIDER_TOKEN, 
-        currency="SGD", 
-        prices=[LabeledPrice("Test", 5  * 100)]
+        text="Sorry, I didn't understand that command."
     )
 
-async def precheckout(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Answers the PreQecheckoutQuery"""
-    query = update.pre_checkout_query
-    # check the payload
-    if query.invoice_payload != "Custom-Payload":
-        # answer False pre_checkout_query
-        await query.answer(ok=False, error_message="Something went wrong...")
-    else:
-        await query.answer(ok=True)
+""""
+=============================================================================================
+view_events: View ongoing events
+=============================================================================================
+"""
 
-async def successful_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Confirms the successful payment."""
-    # Send payment info to endpoint for storage on firebase
-    await update.message.reply_text("Thank you for your payment!")
+async def view_events(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    endpoint_url = "http://localhost:3000"
+    response = requests.get(endpoint_url + "/viewEvents")
+    response_data = response.json()
+    text = ""
+
+    # Format Response data
+    for event in response_data:
+        event_title = event['title']
+        event_description = event['description']
+        event_time = event['time']
+        event_venue = event['venue']
+        event_price = event['price']
+
+        text += f"Event Title: *{event_title}*\n" \
+            f"Description: {event_description}\n" \
+            f"Time: {event_time}\n" \
+            f"Venue: {event_venue}\n" \
+            f"Price: *{event_price}*\n\n"
+    text += "Use /register to register for any events that you are interested in"
+
+    await update.message.reply_text(
+        text, parse_mode='Markdown'
+    )
+
+async def register_for_event(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        'Please provide the title of the Event that you would like to register for'
+    )
+    return REGISTER
+
+async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    event_title = update.message.text
+    print("Complete registration function")
+    await update.message.reply_text(
+        f'Thank you for registring for {event_title}'
+    )
+
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(TELE_TOKEN_TEST).build()
     
     conversation_handler = ConversationHandler(
-    entry_points=[
-        CommandHandler('start', start),
-        ],
-    states={
-        # EVENT:  [MessageHandler(filters.Regex("^(Yes)$"), event)],
-    },
-    fallbacks=[CommandHandler('cancel', cancel)]
-)
-    application.add_handler(PreCheckoutQueryHandler(precheckout))
-    application.add_handler(
-        MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment)
+        entry_points=[
+            CommandHandler('start', start),
+            CommandHandler('cancel', cancel), 
+            CommandHandler('viewEvents', view_events), 
+            CommandHandler('register', register_for_event)
+            ],
+        states={
+            REGISTER: [MessageHandler(filters.TEXT, complete_registration)]
+        },
+        fallbacks=[MessageHandler(filters.TEXT, unknown)]
     )
     application.add_handler(conversation_handler)
+    application.add_handler(MessageHandler(filters.TEXT, unknown))
     
     application.run_polling()
