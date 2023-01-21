@@ -31,7 +31,7 @@ const EventForm = ({eventName2,description2,price2,dateTime2,venue2,capacity2}:E
     if (data) {
       const dbInstance = doc(database, "/events", data.title);
       setDoc(dbInstance, data).then(() => {
-        
+        window.location.reload()
         console.log("uploaded form data");
       });
     }
@@ -141,7 +141,7 @@ const EventForm = ({eventName2,description2,price2,dateTime2,venue2,capacity2}:E
         />
       </div>
       <button
-      
+      type="button"
         className="w-full text-white bg-black hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
         onClick={handleClick}
       >

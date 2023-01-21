@@ -21,7 +21,7 @@ const EventForm = () => {
     if (data) {
       const dbInstance = doc(database, "/events", data.title);
       setDoc(dbInstance, data).then(() => {
-        
+        window.location.reload()
         console.log("uploaded form data");
       });
     }
@@ -139,7 +139,7 @@ const EventForm = () => {
         />
       </div>
       <button
-      
+      type="button"
         className="w-full text-white bg-black hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
         onClick={handleClick}
       >
