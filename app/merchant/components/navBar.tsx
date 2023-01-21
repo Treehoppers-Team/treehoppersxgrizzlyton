@@ -1,4 +1,14 @@
 import { useState } from 'react'
+import logo from "../public/mynt.webp"
+import Image from 'next/image'
+import dynamic from "next/dynamic";
+
+const App = dynamic(
+  () => {
+    return import("../pages/Web3Auth");
+  },
+  { ssr: false }
+);
 
 interface NavLinkProps {
     to: string,
@@ -6,7 +16,7 @@ interface NavLinkProps {
 }
 
 function NavLink({to, children}: NavLinkProps) {
-    return <a href={to} className={`mx-4`}>
+    return <a href={to} className={`mx-2 p-2 hover:bg-gray-200 rounded-lg`}>
         {children}
     </a>
 }
@@ -20,7 +30,10 @@ function MobileNav({open, setOpen}: MobileNavProps) {
     return (
         <div className={`absolute top-0 left-0 h-screen w-screen bg-white transform ${open ? "-translate-x-0" : "-translate-x-full"} transition-transform duration-300 ease-in-out filter drop-shadow-md `}>
             <div className="flex items-center justify-center filter drop-shadow-md bg-white h-20"> {/*logo container*/}
-                <a className="text-xl font-semibold" href="/">LOGO</a>
+                {/* <a className="text-xl font-semibold" href="/">LOGO</a> */}
+                <a href="/">
+                <Image src={logo} alt={''} width={64}></Image>
+                </a>
             </div>
             <div className="flex flex-col ml-4">
                 <a className="text-xl font-medium my-4" href="/createEvent" onClick={() => setTimeout(() => {setOpen(!open)}, 100)}>
@@ -32,6 +45,7 @@ function MobileNav({open, setOpen}: MobileNavProps) {
                 <a className="text-xl font-normal my-4" href="/raffle" onClick={() => setTimeout(() => {setOpen(!open)}, 100)}>
                     Conduct Raffle
                 </a>
+                <App/>
             </div>  
         </div>
     )
@@ -44,7 +58,11 @@ export default function Navbar() {
         <nav className="flex filter drop-shadow-md bg-white px-4 py-4 h-20 items-center">
             <MobileNav open={open} setOpen={setOpen}/>
             <div className="w-3/12 flex items-center">
-                <a className="text-2xl font-semibold" href="/">LOGO</a>
+                {/* <a className="text-2xl font-semibold" href="/">LOGO</a> */}
+                <a href="/">
+                <Image src={logo} alt={''} width={64}></Image>
+                </a>
+                
             </div>
             <div className="w-9/12 flex justify-end items-center">
 
@@ -67,9 +85,15 @@ export default function Navbar() {
                     <NavLink to="/about">
                         About
                     </NavLink>
+                    <div>
+                    <App/>
+                    </div>
+                    
 
                 </div>
+                
             </div>
+            
         </nav>
     )
 }

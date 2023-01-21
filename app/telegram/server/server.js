@@ -43,6 +43,12 @@ const getEventsFirebase = async() => {
   return eventInfos
 }
 
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', '*');
+  next();
+});
+
 app.get("/viewEvents", (req, res) => {
   try {
     getEventsFirebase().then((result) => res.send(result))
