@@ -33,7 +33,7 @@ export default function Card({
 
   return (
     <>
-      <div className="w-96 max-w-sm bg-gray-100 rounded-lg shadow-md justify-center">
+      <div className="w-72 max-w-sm bg-gray-100 rounded-lg shadow-md justify-center border border-white hover:border-black hover:-translate-y-1 hover:scale-105 transition ease-in-out">
         <img
           className="rounded-t-lg h-48 w-full object-cover object-center"
           src="https://source.unsplash.com/random"

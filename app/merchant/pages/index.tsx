@@ -3,6 +3,7 @@ import { Inter } from "@next/font/google";
 import styles from "@/styles/Home.module.css";
 import Card from "@/components/card";
 import { useEffect, useState } from "react";
+import BasicStatistics from "@/components/stats";
 
 
 const inter = Inter({ subsets: ["latin"] });
@@ -35,7 +36,7 @@ export default function Home() {
   
 
   const cardSection = (body: any) => {
-    return <div className="flex flex-wrap justify-center">{body}</div>;
+    return <div className="flex flex-wrap justify-center m-4">{body}</div>;
   };
 
   // make an api call to /viewEvents to get all the events created by the merchant
@@ -66,7 +67,8 @@ export default function Home() {
       </Head>
 
       <main>
-        <div className="mx-8 my-4 p-4 text-gray-700 bg-green-100 text-4xl font-bold rounded-lg text-center">Number of Events: {events.length}</div>
+        <BasicStatistics events={loading==false? events.length : 0}/>
+
         {loading==false ? cardSection(generateCards(events)) : null}
       </main>
 
