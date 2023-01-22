@@ -66,9 +66,7 @@ export default function Home() {
       </Head>
 
       <main>
-        <h1 className="px-6 py-6 text-4xl font-bold text-center">
-          Events Created
-        </h1>
+        <div className="mx-8 my-4 p-4 text-gray-700 bg-green-100 text-4xl font-bold rounded-lg text-center">Number of Events: {events.length}</div>
         {loading==false ? cardSection(generateCards(events)) : null}
       </main>
 
