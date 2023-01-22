@@ -16,6 +16,7 @@ import {
     const { title, stat } = props;
     return (
       <Stat
+        zIndex={-1}
         px={{ base: 4, md: 8 }}
         py={'5'}
         shadow={'xl'}

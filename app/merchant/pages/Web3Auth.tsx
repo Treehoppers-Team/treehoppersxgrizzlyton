@@ -183,7 +183,7 @@ function App() {
     <>
       <button
         onClick={onOpen}
-        className="text-white bg-[#00C48A] hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm px-5 py-2.5 text-center"
+        className="text-white h-16 bg-[#00C48A] hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm px-5 py-2.5 text-center"
       >
         Manage Wallet
       </button>
@@ -256,7 +256,7 @@ function App() {
 
   const unloggedInView = (
     <button 
-    className="text-white bg-[#00C48A] hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm px-5 py-2.5 text-center"
+    className="text-white h-16 bg-[#00C48A] hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm px-5 py-2.5 text-center"
     onClick={login}>
       Login
     </button>

@@ -20,7 +20,7 @@ function NavLink({ to, children }: NavLinkProps) {
   return (
     <Link
       href={to}
-      className={`mx-1 p-2 font-bold hover:text-gray-700 tracking-tight`}
+      className={`flex mx-1 p-2 font-bold hover:text-gray-700 tracking-tight items-center`}
     >
       {children}
     </Link>
@@ -35,7 +35,7 @@ interface MobileNavProps {
 function MobileNav({ open, setOpen }: MobileNavProps) {
   return (
     <div
-      className={`absolute top-0 left-0 h-screen w-screen bg-green-200 transform ${
+      className={`absolute top-0 left-0 h-screen w-screen bg-white transform ${
         open ? "-translate-x-0" : "-translate-x-full"
       } transition-transform duration-300 ease-in-out filter drop-shadow-md `}
     >
@@ -90,21 +90,21 @@ function MobileNav({ open, setOpen }: MobileNavProps) {
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   return (
-    <nav className="flex filter drop-shadow-md border-b border-black px-4 py-4 h-20 items-center">
+    <nav className="flex filter drop-shadow-md border-b border-black px-2 py-2 h-20 items-center">
       <MobileNav open={open} setOpen={setOpen} />
-      <div className="w-3/12 flex flex-wrap items-center">
+      <div className="w-1/2 flex flex-wrap items-center">
         {/* <a className="text-2xl font-semibold" href="/">LOGO</a> */}
         <Link href="/">
           <Image src={logo} alt={""} width={64}></Image>
         </Link>
         <Link
           href="/"
-          className={`mx-2 p-2 text-3xl text-[#00C48A] font-bold hover:text-gray-700 tracking-tight`}
+          className={`mx-2 p-2 text-3xl text-[#00C48A] font-bold tracking-tight`}
         >
           Mynt.
         </Link>
       </div>
-      <div className="w-9/12 flex justify-end items-center">
+      <div className="w-1/2 flex justify-end items-center">
         <div
           className="z-50 flex relative w-8 h-8 flex-col justify-between items-center md:hidden"
           onClick={() => {
@@ -133,7 +133,7 @@ export default function Navbar() {
           <NavLink to="/createEvent">Create Event</NavLink>
           <NavLink to="/raffle">Conduct Raffle</NavLink>
           <NavLink to="/about">About</NavLink>
-          <div>
+          <div className="ml-1">
             <App />
           </div>
         </div>

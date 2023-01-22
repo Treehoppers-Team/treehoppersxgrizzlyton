@@ -31,9 +31,14 @@ export default function Card({
 }: CardProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
+  function dateFormat(dateString: string | number | Date) {
+    let date = new Date(dateString);
+    return date.toLocaleString();
+  }
+
   return (
     <>
-      <div className="w-72 max-w-sm bg-gray-100 rounded-lg shadow-md justify-center border border-white hover:border-black hover:-translate-y-1 hover:scale-105 transition ease-in-out">
+      <div className="w-72 max-w-sm bg-gray-100 rounded-lg shadow-md justify-center border border-white hover:border-black hover:-translate-y-1 transition ease-in-out">
         <img
           className="rounded-t-lg h-48 w-full object-cover object-center"
           src="https://source.unsplash.com/random"
@@ -41,7 +46,7 @@ export default function Card({
         />
         <div className="p-2 flex flex-col justify-center">
           <h2 className="text-2xl font-bold text-left">{title}</h2>
-          <a className="font-light text-gray-600 tracking-tight">{time}</a>
+          <a className="font-light text-gray-600 tracking-tight">{dateFormat(time)}</a>
 
           <h5 className="my-2 tracking-tight text-gray-900">{description}</h5>
           <div className="flex flex-wrap justify-left">
