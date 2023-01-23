@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { database } from "../firebaseConfig";
+import { database, storage } from "../firebaseConfig";
 import { setDoc, doc } from "firebase/firestore";
+import { ref, uploadBytes } from "firebase/storage";
 
 interface EventFormProps {
     eventName2: string;
@@ -19,30 +20,39 @@ const EventForm = ({eventName2,description2,price2,dateTime2,venue2,capacity2}:E
   const [dateTime, setDateTime] = useState(dateTime2);
   const [venue, setVenue] = useState(venue2);
   const [capacity, setCapacity] = useState(capacity2);
-  const [symbol, setSymbol] = useState<File | null>(null);
+  const [image, setImage] = useState<File>();
 
   function handleClick() {
-    console.log(eventName, dateTime, venue, capacity, symbol);
-    uploadData({ title: eventName, description: description, price: price, time: dateTime, venue: venue, capacity: capacity})
+    console.log(eventName, dateTime, venue, capacity, image);
+    uploadData({ title: eventName, description: description, price: price, time: dateTime, venue: venue, capacity: capacity},image!)
   }
 
-  const uploadData = (data: { title: string; description: string; price: string; time: string; venue: string; capacity: string; } | undefined) => {
+  const storageRef = ref(storage, eventName + dateTime);
+
+  const uploadData = (data: { title: string; description: string; price: string; time: string; venue: string; capacity: string;} | undefined, image: File) => {
     // const dbInstance = collection(database, '/MerchantCollection');
     if (data) {
-      const dbInstance = doc(database, "/events", data.title);
+      const dbInstance = doc(database, "/events", data.title + data.time);
       setDoc(dbInstance, data).then(() => {
         window.location.reload()
         console.log("uploaded form data");
       });
+      // 'file' comes from the Blob or File API
+      if (image) {
+        uploadBytes(storageRef, image!).then((snapshot) => {
+          console.log('Uploaded a blob or file!');
+        });
+      }
+
     }
 
   };
-
+  const imageSrc = `https://firebasestorage.googleapis.com/v0/b/treehoppers-mynt.appspot.com/o/${eventName+dateTime}?alt=media&token=07ddd564-df85-49a5-836a-c63f0a4045d6`
   return (
     <form className="bg-gray-100 p-4 rounded-lg shadow-md">
                 <img
           className="rounded-t-lg h-48 w-full object-cover object-center"
-          src="https://source.unsplash.com/random"
+          src={imageSrc}
           alt="event image"
         />
       <div className="my-4">
@@ -128,16 +138,16 @@ const EventForm = ({eventName2,description2,price2,dateTime2,venue2,capacity2}:E
       <div className="mb-4">
         <label
           className="block text-gray-700 font-medium mb-2"
-          htmlFor="symbol"
+          htmlFor="image"
         >
-          Symbol
+          Image
         </label>
         <input
           className="border border-gray-400 p-2 w-full rounded-md"
-          id="symbol"
+          id="image"
           type="file"
           
-          onChange={(e) => setSymbol(e.target.files?.[0] || null)}
+          onChange={(e) => setImage(e.target.files?.[0])}
         />
       </div>
       <button

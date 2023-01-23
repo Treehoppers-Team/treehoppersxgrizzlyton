@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { database } from "../firebaseConfig";
+import { storage,database } from "../firebaseConfig";
 import { setDoc, doc } from "firebase/firestore";
+import { ref, uploadBytes } from "firebase/storage";
 
 const EventForm = () => {
   const [eventName, setEventName] = useState("");
@@ -9,20 +10,26 @@ const EventForm = () => {
   const [dateTime, setDateTime] = useState("");
   const [venue, setVenue] = useState("");
   const [capacity, setCapacity] = useState("");
-  const [symbol, setSymbol] = useState<File | null>(null);
+  const [image, setImage] = useState<File>();
 
   function handleClick() {
-    console.log(eventName, dateTime, venue, capacity, symbol);
-    uploadData({ title: eventName, description: description, price: price, time: dateTime, venue: venue, capacity: capacity})
+    console.log(eventName, dateTime, venue, capacity, image);
+    uploadData({ title: eventName, description: description, price: price, time: dateTime, venue: venue, capacity: capacity},image!)
   }
 
-  const uploadData = (data: { title: string; description: string; price: string; time: string; venue: string; capacity: string; } | undefined) => {
+  const storageRef = ref(storage, eventName + dateTime);
+
+  const uploadData = (data: { title: string; description: string; price: string; time: string; venue: string; capacity: string;} | undefined, image: File) => {
     // const dbInstance = collection(database, '/MerchantCollection');
     if (data) {
-      const dbInstance = doc(database, "/events", data.title);
+      const dbInstance = doc(database, "/events", data.title + data.time);
       setDoc(dbInstance, data).then(() => {
         window.location.reload()
         console.log("uploaded form data");
+      });
+      // 'file' comes from the Blob or File API
+      uploadBytes(storageRef, image!).then((snapshot) => {
+        console.log('Uploaded a blob or file!');
       });
     }
 
@@ -126,16 +133,16 @@ const EventForm = () => {
       <div className="mb-4">
         <label
           className="block text-gray-700 font-medium mb-2"
-          htmlFor="symbol"
+          htmlFor="image"
         >
-          Symbol
+          Image
         </label>
         <input
           className="border border-gray-400 p-2 w-full rounded-md"
-          id="symbol"
+          id="image"
           type="file"
           
-          onChange={(e) => setSymbol(e.target.files?.[0] || null)}
+          onChange={(e) => setImage(e.target.files?.[0])}
         />
       </div>
       <button
@@ -150,3 +157,5 @@ const EventForm = () => {
 };
 
 export default EventForm;
+
+

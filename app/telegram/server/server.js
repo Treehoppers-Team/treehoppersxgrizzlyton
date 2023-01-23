@@ -35,9 +35,9 @@ const getEventsFirebase = async() => {
   const querySnapshot = await getDocs(collection(db, "events"));
   const eventInfos = []
   querySnapshot.forEach((doc) => {
-    const eventTitle = doc.id
+    // const eventTitle = doc.id
     const eventData = doc.data()
-    eventData.title = eventTitle
+    // eventData.title = eventTitle
     eventInfos.push(eventData)
   })
   return eventInfos
