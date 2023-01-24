@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-TELE_TOKEN_TEST = os.getenv('TELEGRAM_TOKEN')
+TELE_TOKEN_TEST = os.getenv('TELE_TOKEN_TEST')
 PROVIDER_TOKEN = os.getenv('TEST_PAYMENT_TOKEN')
 
 logging.basicConfig(
@@ -23,7 +23,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-REGISTER = range(1)
+REGISTER, COMPLETE_REGISTER = range(2)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -75,18 +75,62 @@ async def view_events(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text, parse_mode='Markdown'
     )
 
+""""
+=============================================================================================
+register_for_event
+=============================================================================================
+"""
+
 async def register_for_event(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         'Please provide the title of the Event that you would like to register for'
     )
     return REGISTER
 
-async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def get_registration_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Get Event list from the database
     event_title = update.message.text
+    endpoint_url = "http://localhost:3000"
+    response = requests.get(endpoint_url + "/viewEvents")
+    response_data = response.json()
+    events = []
+    for event in response_data:
+        events.append(event['title'])
+    print(f"Existing Event titles: {events}")
+
+    # Check if event exist
+    if event_title in events:
+        await update.message.reply_text(
+            f'Thank you for your interest in {event_title}, please input your name and contact number in this format `name : contact`'
+        )
+        return COMPLETE_REGISTER
+    else:
+        await update.message.reply_text(
+            f'Event {event_title} does not exist, please provide a valid event title'
+        )
+        # TODO: Add logic to allow users to call /viewEvents?
+        return REGISTER
+
+async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("Complete registration function")
-    await update.message.reply_text(
-        f'Thank you for registring for {event_title}'
-    )
+    user_info = update.message.text.split(': ')
+
+    endpoint_url = "http://localhost:3000"
+    user_name = user_info[0]
+    user_contact = user_info[1]
+    user_handle = update.message.from_user.username
+    data = {'user_name': user_name, 'user_contact': user_contact, 'user_handle': user_handle}
+
+    response = requests.post(endpoint_url + "/uploadUserInfo", json = data)
+    
+    if response.status_code == 200:
+        await update.message.reply_text(
+            f'Thank you for registering! We`ll be contacting you shortly'
+        )
+    else:
+        await update.message.reply_text(
+            f'Sorry, there was an error with your registration. Please try again later'
+        )
 
 
 if __name__ == '__main__':
@@ -100,7 +144,8 @@ if __name__ == '__main__':
             CommandHandler('register', register_for_event)
             ],
         states={
-            REGISTER: [MessageHandler(filters.TEXT, complete_registration)]
+            REGISTER: [MessageHandler(filters.TEXT, get_registration_info)],
+            COMPLETE_REGISTER: [MessageHandler(filters.Regex('^([A-Za-z ]+): ([0-9A-Za-z.+-]+)$'), complete_registration)],
         },
         fallbacks=[MessageHandler(filters.TEXT, unknown)]
     )
