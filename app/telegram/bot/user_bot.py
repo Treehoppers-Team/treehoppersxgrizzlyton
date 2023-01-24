@@ -23,7 +23,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-REGISTER, COMPLETE_REGISTER = range(2)
+REGISTER, COMPLETE_REGISTER, CHECK = range(3)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -100,6 +100,8 @@ async def get_registration_info(update: Update, context: ContextTypes.DEFAULT_TY
 
     # Check if event exist
     if event_title in events:
+        # Save event_title in context object
+        context.user_data["event_title"] = event_title
         await update.message.reply_text(
             f'Thank you for your interest in {event_title}, please input your name and contact number in this format `name : contact`'
         )
@@ -116,10 +118,11 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
     user_info = update.message.text.split(': ')
 
     endpoint_url = "http://localhost:3000"
+    user_handle = update.message.from_user.username
     user_name = user_info[0]
     user_contact = user_info[1]
-    user_handle = update.message.from_user.username
-    data = {'user_name': user_name, 'user_contact': user_contact, 'user_handle': user_handle}
+    event_title = context.user_data["event_title"]
+    data = {'user_handle': user_handle, 'user_name': user_name, 'user_contact': user_contact, 'event_title': event_title }
 
     response = requests.post(endpoint_url + "/uploadUserInfo", json = data)
     
@@ -131,8 +134,38 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
         await update.message.reply_text(
             f'Sorry, there was an error with your registration. Please try again later'
         )
+""""
+=============================================================================================
+check_registration
+=============================================================================================
+"""
+async def check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_handle = update.message.from_user.username
+    await update.message.reply_text(
+            f'Please key in your name'
+        )
 
+    return CHECK
 
+async def registration_results(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # TODO: Add logic that pulls registration information from fire store
+    user_name = update.message.text
+    print(f'Checking status for {user_name}')
+    result = True # Hardcoded to False for testing purposes
+    if result:
+       await update.message.reply_text(
+            f"Here are your registration details \n"\
+            f"Event Title: *TEST*\n" \
+            f"Description: TEST\n" \
+            f"Time: TEST\n" \
+            f"Venue: TEST\n" \
+            f"Price: *TEST*\n\n"
+        )
+    else:
+        await update.message.reply_text(
+            f'Sorry, we can`t find any registrations records from you, you can register using the command /register!'
+        )
+ 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(TELE_TOKEN_TEST).build()
     
@@ -141,11 +174,13 @@ if __name__ == '__main__':
             CommandHandler('start', start),
             CommandHandler('cancel', cancel), 
             CommandHandler('viewEvents', view_events), 
-            CommandHandler('register', register_for_event)
+            CommandHandler('register', register_for_event),
+            CommandHandler('checkRegistration', check_registration)
             ],
         states={
             REGISTER: [MessageHandler(filters.TEXT, get_registration_info)],
             COMPLETE_REGISTER: [MessageHandler(filters.Regex('^([A-Za-z ]+): ([0-9A-Za-z.+-]+)$'), complete_registration)],
+            CHECK: [MessageHandler(filters.TEXT, registration_results)]
         },
         fallbacks=[MessageHandler(filters.TEXT, unknown)]
     )

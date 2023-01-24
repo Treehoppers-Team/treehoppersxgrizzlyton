@@ -59,13 +59,16 @@ app.get("/viewEvents", (req, res) => {
 
 app.post('/uploadUserInfo', (req, res) => {
   // Extract user data from the request body
+  const user_handle = req.body.user_handle;
   const user_name = req.body.user_name;
   const user_contact = req.body.user_contact;
-  const user_handle = req.body.user_handle;
+  const event_title = req.body.event_title
   // Logic to upload user data to firebase
   docData = {
     name: user_name,
-    contact: user_contact
+    contact: user_contact,
+    event: event_title,
+    status: 'pending'
   };
   setDoc(doc(db, "users", user_handle), docData);
   
