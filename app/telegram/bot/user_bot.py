@@ -23,7 +23,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-REGISTER, COMPLETE_REGISTER, CHECK = range(3)
+REGISTER, COMPLETE_REGISTER = range(2)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -77,7 +77,9 @@ async def view_events(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 """"
 =============================================================================================
-register_for_event
+register_for_event: Prompt user for event title
+get_registration_info: Validate event title provided
+complete_registration: Send API request with registration details
 =============================================================================================
 """
 
@@ -118,11 +120,18 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
     user_info = update.message.text.split(': ')
 
     endpoint_url = "http://localhost:3000"
+    user_id = update.message.from_user.id
     user_handle = update.message.from_user.username
     user_name = user_info[0]
     user_contact = user_info[1]
     event_title = context.user_data["event_title"]
-    data = {'user_handle': user_handle, 'user_name': user_name, 'user_contact': user_contact, 'event_title': event_title }
+    data = {
+        'user_id': user_id, 
+        'user_handle': user_handle, 
+        'user_name': user_name, 
+        'user_contact': user_contact, 
+        'event_title': event_title 
+    }
 
     response = requests.post(endpoint_url + "/uploadUserInfo", json = data)
     
@@ -136,35 +145,39 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
         )
 """"
 =============================================================================================
-check_registration
+check_registration: Send API request with user's telegram ID to view events 
+registered and their respective statuses
 =============================================================================================
 """
 async def check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_handle = update.message.from_user.username
-    await update.message.reply_text(
-            f'Please key in your name'
-        )
-
-    return CHECK
-
-async def registration_results(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id, 
+        text="Checking for events that you have registered for..;"
+    )
     # TODO: Add logic that pulls registration information from fire store
-    user_name = update.message.text
-    print(f'Checking status for {user_name}')
-    result = True # Hardcoded to False for testing purposes
-    if result:
-       await update.message.reply_text(
-            f"Here are your registration details \n"\
-            f"Event Title: *TEST*\n" \
-            f"Description: TEST\n" \
-            f"Time: TEST\n" \
-            f"Venue: TEST\n" \
-            f"Price: *TEST*\n\n"
-        )
-    else:
-        await update.message.reply_text(
-            f'Sorry, we can`t find any registrations records from you, you can register using the command /register!'
-        )
+    user_id = update.message.from_user.id
+    print(f'Checking status for {user_id}')
+
+    endpoint_url = "http://localhost:3000"
+    data = {'user_id': user_id}
+    response = requests.get(endpoint_url + f"/checkRegistration/{user_id}")
+    response_data = response.json()
+    await update.message.reply_text(response_data)
+
+    # result = True # Hardcoded to False for testing purposes
+    # if result:
+    #    await update.message.reply_text(
+    #         f"Here are your registration details \n"\
+    #         f"Event Title: *TEST*\n" \
+    #         f"Description: TEST\n" \
+    #         f"Time: TEST\n" \
+    #         f"Venue: TEST\n" \
+    #         f"Price: *TEST*\n\n"
+    #     )
+    # else:
+    #     await update.message.reply_text(
+    #         f'Sorry, we can`t find any registrations records from you, you can register using the command /register!'
+    #     )
  
 if __name__ == '__main__':
     application = ApplicationBuilder().token(TELE_TOKEN_TEST).build()
@@ -180,7 +193,6 @@ if __name__ == '__main__':
         states={
             REGISTER: [MessageHandler(filters.TEXT, get_registration_info)],
             COMPLETE_REGISTER: [MessageHandler(filters.Regex('^([A-Za-z ]+): ([0-9A-Za-z.+-]+)$'), complete_registration)],
-            CHECK: [MessageHandler(filters.TEXT, registration_results)]
         },
         fallbacks=[MessageHandler(filters.TEXT, unknown)]
     )
