@@ -57,5 +57,21 @@ app.get("/viewEvents", (req, res) => {
   }
 })
 
+app.post('/uploadUserInfo', (req, res) => {
+  // Extract user data from the request body
+  const user_name = req.body.user_name;
+  const user_contact = req.body.user_contact;
+  const user_handle = req.body.user_handle;
+  // Logic to upload user data to firebase
+  docData = {
+    name: user_name,
+    contact: user_contact
+  };
+  setDoc(doc(db, "users", user_handle), docData);
+  
+  // Send a response to the client
+  res.status(200).json({ message: 'User information received' });
+});
+
 // Start the Express.js web server
 app.listen(port, () => console.log("Express.js API listening on port 3000"));
