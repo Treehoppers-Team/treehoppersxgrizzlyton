@@ -74,6 +74,7 @@ async def view_events(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         text, parse_mode='Markdown'
     )
+    return ConversationHandler.END
 
 """"
 =============================================================================================
@@ -143,6 +144,7 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
         await update.message.reply_text(
             f'Sorry, there was an error with your registration. Please try again later'
         )
+    return ConversationHandler.END
 """"
 =============================================================================================
 check_registration: Send API request with user's telegram ID to view events 
@@ -152,9 +154,9 @@ registered and their respective statuses
 async def check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id=update.effective_chat.id, 
-        text="Checking for events that you have registered for..;"
+        text="Checking for events that you have registered for..."
     )
-    # TODO: Add logic that pulls registration information from fire store
+
     user_id = update.message.from_user.id
     print(f'Checking status for {user_id}')
 
@@ -162,22 +164,26 @@ async def check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE)
     data = {'user_id':user_id}
     response = requests.get(endpoint_url + f"/checkRegistration/{user_id}")
     response_data = response.json()
-    await update.message.reply_text(response_data)
 
-    # result = True # Hardcoded to False for testing purposes
-    # if result:
-    #    await update.message.reply_text(
-    #         f"Here are your registration details \n"\
-    #         f"Event Title: *TEST*\n" \
-    #         f"Description: TEST\n" \
-    #         f"Time: TEST\n" \
-    #         f"Venue: TEST\n" \
-    #         f"Price: *TEST*\n\n"
-    #     )
-    # else:
-    #     await update.message.reply_text(
-    #         f'Sorry, we can`t find any registrations records from you, you can register using the command /register!'
-    #     )
+    # Format Response data
+    text = ""
+    
+    if response_data:
+        text += "These are your current registered events!\n\n"
+        for event in response_data:
+            event_title = event['eventTitle']
+            status = event['status']
+
+            text += f"Event Title: *{event_title}*\n" \
+                f"Registration Status: {status}\n\n" \
+    
+    else:
+        text += "No events found! Use /register to register for an event!"            
+    
+    await update.message.reply_text(
+        text, parse_mode='Markdown'
+    )
+    return ConversationHandler.END
  
 if __name__ == '__main__':
     application = ApplicationBuilder().token(TELE_TOKEN_TEST).build()
