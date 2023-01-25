@@ -167,7 +167,7 @@ async def check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Format Response data
     text = ""
-    
+    # Checks if any events registered
     if response_data:
         text += "These are your current registered events!\n\n"
         for event in response_data:
@@ -184,7 +184,8 @@ async def check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE)
         text, parse_mode='Markdown'
     )
     return ConversationHandler.END
- 
+
+
 if __name__ == '__main__':
     application = ApplicationBuilder().token(TELE_TOKEN_TEST).build()
     
