@@ -3,6 +3,9 @@ import logo from "../public/mynt.webp";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import {signIn, signOut, useSession} from "next-auth/react";
+import { Card, CardBody, CardFooter, Stack, Heading, Text, Button, SkeletonText, Box } from '@chakra-ui/react';
+import { useRouter } from 'next/router';
 
 const App = dynamic(
   () => {
@@ -81,7 +84,7 @@ function MobileNav({ open, setOpen }: MobileNavProps) {
         >
           Conduct Raffle
         </Link>
-        <App />
+
       </div>
     </div>
   );
@@ -89,6 +92,10 @@ function MobileNav({ open, setOpen }: MobileNavProps) {
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const { data: session, status } = useSession();
+  const router = useRouter();
+	const loading = status === 'loading';
+  const isLoggedIn = !!session?.user;
   return (
     <nav className="flex filter drop-shadow-md border-b border-black px-2 py-2 h-20 items-center">
       <MobileNav open={open} setOpen={setOpen} />
@@ -133,8 +140,50 @@ export default function Navbar() {
           <NavLink to="/createEvent">Create Event</NavLink>
           <NavLink to="/raffle">Conduct Raffle</NavLink>
           <NavLink to="/about">About</NavLink>
-          <div className="ml-1">
-            <App />
+          <div className="flex flex-wrap">
+            {loading ? null : (
+              <>
+                {/* {session?.user?.image ? (
+                  <Image
+                    height={32}
+                    width={32}
+                    src={session?.user?.image}
+                    alt=""
+                  />
+                ) : null} */}
+
+                <div className="flex flex-wrap items-center m-1">
+                  {session?.user ? (
+                    <>
+                      <a>You are signed in as</a>&nbsp;
+                      <a className="font-bold">
+                        {session.user.email ?? session.user.name}
+                      </a>
+                    </>
+                  ) : (
+                    <a>You are not signed in</a>
+                  )}
+                </div>
+
+                <Button
+                  variant="solid"
+                  colorScheme="blue"
+                  as="a"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (isLoggedIn) {
+                      router.push("/api/auth/signout");
+                      signOut();
+                    } else {
+                      router.push("/api/auth/signin");
+                      signIn();
+                    }
+                  }}
+                >
+                  {isLoggedIn ? "Sign out" : "Sign in"}
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>

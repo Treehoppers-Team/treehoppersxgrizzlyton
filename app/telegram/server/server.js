@@ -116,4 +116,4 @@ app.get("/checkRegistration/:user_id", (req, res) => {
 });
 
 // Start the Express.js web server
-app.listen(port, () => console.log("Express.js API listening on port 3000"));
+app.listen(port, () => console.log(`Express.js API listening on port ${port}`));

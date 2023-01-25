@@ -19,10 +19,11 @@ import { useEffect, useState } from "react";
 
 import RPC from "./api/solanaRPC";
 
-const clientId =
-  "BLcEFyEx2d1tloesFeDnFSQBPHOInsrxf1zmqKsQQkjO8cTckM0fz-rdkrzSOEBhXmJzyacUvdbf6XLMMTphjIQ"; // get from https://dashboard.web3auth.io
-
-function App() {
+const clientId = "BLcEFyEx2d1tloesFeDnFSQBPHOInsrxf1zmqKsQQkjO8cTckM0fz-rdkrzSOEBhXmJzyacUvdbf6XLMMTphjIQ"
+interface AppProps {
+  callback: (address: string[]) => void;
+}
+function App({ callback }: AppProps) {
   const [web3auth, setWeb3auth] = useState<Web3Auth | null>(null);
   const [provider, setProvider] = useState<SafeEventEmitterProvider | null>(
     null
@@ -75,6 +76,9 @@ function App() {
         await web3auth.initModal();
         if (web3auth.provider) {
           setProvider(web3auth.provider);
+          const rpc = new RPC(web3auth.provider);
+          const address = await rpc.getAccounts();
+          callback(address);
         }
       } catch (error) {
         console.error(error);
@@ -92,6 +96,7 @@ function App() {
     const web3authProvider = await web3auth.connect();
     setProvider(web3authProvider);
     uiConsole("Logged in Successfully!");
+    window.location.reload()
   };
 
   const authenticateUser = async () => {
@@ -119,6 +124,7 @@ function App() {
     }
     await web3auth.logout();
     setProvider(null);
+    window.location.reload()
   };
 
   const getAccounts = async () => {
@@ -178,7 +184,8 @@ function App() {
     }
   }
 
-  const modalStyle = "m-1 p-1 w-full bg-slate-200 rounded-lg hover:bg-slate-300"
+  const modalStyle =
+    "m-1 p-1 w-full bg-slate-200 rounded-lg hover:bg-slate-300";
   const loggedInView = (
     <>
       <button
@@ -230,11 +237,12 @@ function App() {
                 </button>
               </div>
 
-              <button 
+              <button
                 className="w-full m-1 text-white bg-black hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-                onClick={logout} >
-                  Log Out
-                </button>
+                onClick={logout}
+              >
+                Log Out
+              </button>
             </div>
             <div id="console" style={{ whiteSpace: "pre-line" }}>
               <p style={{ whiteSpace: "pre-line" }}></p>
@@ -255,20 +263,15 @@ function App() {
   );
 
   const unloggedInView = (
-    <button 
-    className="text-white h-16 bg-[#00C48A] hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm px-5 py-2.5 text-center"
-    onClick={login}>
+    <button
+      className="text-white h-16 bg-[#00C48A] hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm px-5 py-2.5 text-center"
+      onClick={login}
+    >
       Login
     </button>
   );
 
-  return (
-    <div className="container">
-      <div>
-        {provider ? loggedInView : unloggedInView}
-      </div>
-    </div>
-  );
+  return <>{provider ? loggedInView : unloggedInView}</>;
 }
 
 export default App;
