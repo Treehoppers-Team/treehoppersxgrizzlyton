@@ -159,7 +159,7 @@ async def check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE)
     print(f'Checking status for {user_id}')
 
     endpoint_url = "http://localhost:3000"
-    data = {'user_id': user_id}
+    data = {'user_id':user_id}
     response = requests.get(endpoint_url + f"/checkRegistration/{user_id}")
     response_data = response.json()
     await update.message.reply_text(response_data)

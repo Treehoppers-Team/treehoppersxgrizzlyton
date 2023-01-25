@@ -11,6 +11,9 @@ const {
   getDocs,
   setDoc,
   getFirestore,
+  addDoc,
+  query,
+  where,
 } = require("firebase/firestore");
 
 // Setup Express.js server
@@ -48,19 +51,17 @@ const getEventsFirebase = async () => {
   return eventInfos;
 };
 
-const registerUserFirebase = async (userInfo) => {
+const insertUserFirebase = async (userInfo) => {
   docData = {
     handle: userInfo.user_handle,
     name: userInfo.user_name,
     contact: userInfo.user_contact,
-    event: userInfo.event_title,
-    status: "pending",
   };
   // Doc ID needs to be a string
-  setDoc(doc(db, "users", userInfo.user_id.toString()), docData);
+  await setDoc(doc(db, "users", userInfo.user_id.toString()), docData);
 };
 
-const getUserInfoFirebase = async (userId) => {
+const getUserFirebase = async (userId) => {
   const docRef = doc(db, "users", userId);
   const docSnap = await getDoc(docRef);
   if (docSnap.exists()) {
@@ -69,6 +70,29 @@ const getUserInfoFirebase = async (userId) => {
     return {result: "No Such User Exists"}
   }
 };
+
+const insertRegistrationFirebase = async (registrationInfo) => {
+  docData = {
+    // Inserting as a string bc user_id in user collection is string as well
+    userId: registrationInfo.user_id.toString(), 
+    eventTitle: registrationInfo.event_title,
+    status: "pending",
+  }
+  await addDoc(collection(db, "registrations"), docData);
+}
+
+const getRegistrationFirebase = async (userId) => {
+  const registrationRef = collection(db, "registrations");
+  // UserId needs to be converted from number to string prior to the check
+  const filter = query(registrationRef, where("userId", "==", userId.toString()));
+  const querySnapshot = await getDocs(filter);
+  const registrationInfos = [];
+  querySnapshot.forEach((doc) => {
+    const registrationData = doc.data()
+    registrationInfos.push(registrationData)
+  });
+  return registrationInfos
+}
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -93,12 +117,15 @@ app.post("/uploadUserInfo", (req, res) => {
     user_handle,
     user_name,
     user_contact,
-    event_title,
+  };
+  const registrationInfo = {
+    user_id,
+    event_title
   };
   try {
-    registerUserFirebase(userInfo).then(() => {
-      res.status(200).json({ message: "User successfully registered" });
-    });
+    insertUserFirebase(userInfo)
+    .then(() => insertRegistrationFirebase(registrationInfo))
+    .then(() => res.status(200).json({ message: "User successfully registered" }));
   } catch (err) {
     console.log(err);
   }
@@ -107,7 +134,7 @@ app.post("/uploadUserInfo", (req, res) => {
 app.get("/checkRegistration/:user_id", (req, res) => {
   const user_id = req.params.user_id;
   try {
-    getUserInfoFirebase(user_id).then((result) => {
+    getRegistrationFirebase(user_id).then((result) => {
       res.send(result);
     });
   } catch (err) {
