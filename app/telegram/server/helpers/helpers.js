@@ -58,12 +58,12 @@ module.exports = {
     },
     
     getUserFirebase : async (userId) => {
-        const docRef = doc(db, "users", userId);
+        const docRef = doc(db, "users", userId.toString());
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
         return docSnap.data();
         } else {
-        return {result: "No Such User Exists"}
+        return {name: "No Such User Exists"}
         }
     },
     
