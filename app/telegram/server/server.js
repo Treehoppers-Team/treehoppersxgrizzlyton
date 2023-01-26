@@ -2,7 +2,13 @@ const express = require("express");
 const bodyParser = require("body-parser");
 require("dotenv").config({ path: "../../../.env" });
 
-const { getEventsFirebase, insertUserFirebase, insertRegistrationFirebase, getRegistrationFirebase } = require('./helpers/helpers');
+const {
+  getEventsFirebase,
+  insertUserFirebase,
+  insertRegistrationFirebase,
+  getRegistrationFirebase,
+  getUserFirebase,
+} = require("./helpers/helpers");
 
 // Setup Express.js server
 const port = 3000;
@@ -31,7 +37,7 @@ app.get("/viewEvents", (req, res) => {
 
 app.post("/uploadUserInfo", (req, res) => {
   // Extract user data from the request body
-  const { user_id, user_handle, user_name, user_contact, event_title } =
+  const { user_id, user_handle, user_name, user_contact } =
     req.body;
   const userInfo = {
     user_id,
@@ -39,18 +45,36 @@ app.post("/uploadUserInfo", (req, res) => {
     user_name,
     user_contact,
   };
-  const registrationInfo = {
-    user_id,
-    event_title
-  };
   try {
     insertUserFirebase(userInfo)
-    .then(() => insertRegistrationFirebase(registrationInfo))
-    .then(() => res.status(200).json({ message: "User successfully registered" }));
+      .then(() => res.status(200).json({ message: "User data successfully saved" }))
   } catch (err) {
     console.log(err);
   }
 });
+
+app.get("/getUserInfo/:user_id", (req ,res) => {
+  const user_id = req.params.user_id;
+  try {
+    getUserFirebase(user_id).then((result) => {
+      res.send(result)
+    })
+  } catch (err) {
+    console.log(err)
+  }
+})
+
+app.post("/insertRegistration", (req, res) => {
+  const { user_id, event_title } = req.body
+  const registrationInfo = { user_id, event_title}
+  try {
+    insertRegistrationFirebase(registrationInfo).then(() => {
+      res.status(200).json({ message: "User successfully registered for event" })
+    })
+  } catch (err) {
+    console.log("/insertRegistration error", err)
+  }
+})
 
 app.get("/checkRegistration/:user_id", (req, res) => {
   const user_id = req.params.user_id;
