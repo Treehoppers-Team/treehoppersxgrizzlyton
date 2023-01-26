@@ -2,7 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 require("dotenv").config({ path: "../../../.env" });
 
-const { getEventsFirebase, insertUserFirebase, insertRegistrationFirebase, getRegistrationFirebase } = require('./helpers/helpers');
+const { getEventsFirebase,getUserFirebase, getEventRegistrationsFirebase,insertUserFirebase, insertRegistrationFirebase, getRegistrationFirebase } = require('./helpers/helpers');
 
 // Setup Express.js server
 const port = 3000;
@@ -24,6 +24,24 @@ app.use((req, res, next) => {
 app.get("/viewEvents", (req, res) => {
   try {
     getEventsFirebase().then((result) => res.send(result));
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+app.get("/getRegistrations/:event_id", (req, res) => {
+  const event_id = req.params.event_id;
+  try {
+    getEventRegistrationsFirebase(event_id).then((result) => res.send(result));
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+app.get("/getUserInfo/:user_id", (req, res) => {
+  const user_id = req.params.user_id;
+  try {
+    getUserFirebase(user_id).then((result) => res.send(result));
   } catch (err) {
     console.log(err);
   }

@@ -68,7 +68,6 @@ export default function Home() {
 
       <main>
         <BasicStatistics events={loading==false? events.length : 0}/>
-
         {loading==false ? cardSection(generateCards(events)) : null}
       </main>
 
