@@ -23,7 +23,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-REGISTER, NEW_USER = range(2)
+REGISTER, NEW_USER, PROCEED_PAYMENT = range(3)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -251,6 +251,70 @@ async def check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE)
     )
     return ConversationHandler.END
 
+""""
+=============================================================================================
+makePayment: Send API request to payments API to make payments for successful events
+=============================================================================================
+"""
+async def make_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text='Checking for any registration in our records'
+    )
+    user_id = update.message.from_user.id
+    logger.info(f'Checking for successful registration for {user_id}')
+
+    endpoint_url = "http://localhost:3000"
+    # First check if user has any registration
+    response = requests.get(endpoint_url + f"/checkRegistration/{user_id}")
+    response_data = response.json()
+    # Then check if any of these registrations were successful
+    response_data = [registration for registration in response_data if registration['status'] != "pending"]
+    # Format Response data
+    text = ""
+    # Checks if any events registered
+    if response_data:
+        
+        text += "Congradulations! These are your successful events:\n\n"
+        event_titles = []
+        for event in response_data:
+            event_title = event['eventTitle']
+            event_titles.append(event_title)
+            text += f"Event Title: *{event_title}*\n"
+        
+        text += "\nWhich Event would you like to make payment for?\n\n"
+        # Save list of successful events
+        context.user_data["event_titles"] = event_titles
+        await update.message.reply_text(
+        text, parse_mode='Markdown'
+        )
+        return PROCEED_PAYMENT
+    else:
+        text += "No successful events found! Use /register to register for an event!"
+        await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text= text,
+        parse_mode= 'Markdown'
+        )
+        return ConversationHandler.END
+
+async def proceed_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Check for valid event title
+    event_title = update.message.text
+    event_titles = context.user_data["event_titles"]
+    if event_title in event_titles:
+        await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text='Input Stripe API call here'
+        )
+        return ConversationHandler.END # Change state here depending on stripe call
+    else:
+        await update.message.reply_text(
+        text='Thats not a valid title name'
+        )
+        # TODO: Handle case to prompt for event name again
+        return ConversationHandler.END
+
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(TELE_TOKEN_TEST).build()
@@ -261,11 +325,13 @@ if __name__ == '__main__':
             CommandHandler('cancel', cancel),
             CommandHandler('viewEvents', view_events),
             CommandHandler('register', register_for_event),
-            CommandHandler('checkRegistration', check_registration)
+            CommandHandler('checkRegistration', check_registration),
+            CommandHandler('makePayment', make_payment)
         ],
         states={
             REGISTER: [MessageHandler(filters.TEXT, check_event_title)],
             NEW_USER: [MessageHandler(filters.Regex('^([A-Za-z ]+): ([0-9A-Za-z.+-]+)$'), register_new_user)],
+            PROCEED_PAYMENT: [MessageHandler(filters.TEXT, proceed_payment)],
         },
         fallbacks=[MessageHandler(filters.TEXT, unknown)]
     )

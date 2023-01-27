@@ -4,10 +4,11 @@ require("dotenv").config({ path: "../../../.env" });
 
 const {
   getEventsFirebase,
- getUserFirebase, getEventRegistrationsFirebase,insertUserFirebase,
+  getUserFirebase, 
+  getEventRegistrationsFirebase,
+  insertUserFirebase,
   insertRegistrationFirebase,
   getRegistrationFirebase,
-  getUserFirebase,
 } = require("./helpers/helpers");
 
 // Setup Express.js server
