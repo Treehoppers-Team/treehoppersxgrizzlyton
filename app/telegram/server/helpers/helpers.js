@@ -62,20 +62,10 @@ module.exports = {
         const docRef = doc(db, "users", userId.toString());
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-        return docSnap.data();
+        return {id:docSnap.id, ...docSnap.data()};
         } else {
         return {name: "No Such User Exists"}
         }
-    },
-
-    insertUserFirebase : async (userInfo) => {
-        docData = {
-        handle: userInfo.user_handle,
-        name: userInfo.user_name,
-        contact: userInfo.user_contact,
-        };
-        // Doc ID needs to be a string
-        await setDoc(doc(db, "users", userInfo.user_id.toString()), docData);
     },
     
     insertRegistrationFirebase : async (registrationInfo) => {
@@ -83,9 +73,11 @@ module.exports = {
         // Inserting as a string bc user_id in user collection is string as well
         userId: registrationInfo.user_id.toString(), 
         eventTitle: registrationInfo.event_title,
-        status: "pending",
+        status: registrationInfo.status,
         }
-        await addDoc(collection(db, "registrations"), docData);
+        // Doc ID needs to be a string
+        const docId = docData.userId+docData.eventTitle
+        await setDoc(doc(db, "registrations",docId.toString()), docData);
     },
     
     getRegistrationsFirebase : async (userId) => {

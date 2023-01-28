@@ -44,7 +44,10 @@ const Content = () => {
             console.log(res2)
             const requests = res2.map((r) => getUserInfo(r.userId));
             Promise.all(requests).then((data) => {
-              userData = data;
+              for (let i = 0; i < data.length; i++) {
+                userData.push({status:res2[i].status,...data[i]});
+              }
+              
               console.log("event", eventData);
               console.log("users", userData);
               setLoading(false);
@@ -68,6 +71,7 @@ const Content = () => {
             time={event.time}
             venue={event.venue}
             capacity={event.capacity}
+            users={users}
           />
         ) : null}
       </div>
@@ -86,6 +90,7 @@ const Content = () => {
                     name={user.name}
                     contact={user.contact}
                     handle={user.handle}
+                    pending={user.status === "pending" ? true : false}
                   />
                 </div>
               );

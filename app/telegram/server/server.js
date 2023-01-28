@@ -8,6 +8,7 @@ const {
   insertUserFirebase,
   insertRegistrationFirebase,
   getRegistrationsFirebase,
+  getEventRegistrationsFirebase
 } = require("./helpers/helpers");
 
 // Setup Express.js server
@@ -72,8 +73,8 @@ app.post("/uploadUserInfo", (req, res) => {
 });
 
 app.post("/insertRegistration", (req, res) => {
-  const { user_id, event_title } = req.body
-  const registrationInfo = { user_id, event_title}
+  const { user_id, event_title, status } = req.body
+  const registrationInfo = { user_id, event_title, status}
   try {
     insertRegistrationFirebase(registrationInfo).then(() => {
       res.status(200).json({ message: "User successfully registered for event" })
@@ -93,6 +94,12 @@ app.get("/getRegistrations/:user_id", (req, res) => {
     console.log("/getRegistrations", err);
   }
 });
+
+// insertRegistrationFirebase({
+//   user_id: "123456789",
+//   event_title: "Hackathon",
+//   status: "pending",
+// })
 
 // Start the Express.js web server
 app.listen(port, () => console.log(`Express.js API listening on port ${port}`));
