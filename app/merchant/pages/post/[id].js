@@ -19,7 +19,7 @@ const Content = () => {
 
   async function getRegistrations(eventId) {
     const res = await fetch(
-      `http://localhost:3000/getRegistrations/${eventId}`
+      `http://localhost:3000/getEventRegistrations/${eventId}`
     );
     const data = await res.json();
 

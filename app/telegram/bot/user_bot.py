@@ -14,8 +14,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-TELE_TOKEN_TEST = os.getenv('TELE_TOKEN_TEST')
-PROVIDER_TOKEN = os.getenv('TEST_PAYMENT_TOKEN')
+TELE_TOKEN_TEST = "5756526738:AAFw_S43pkP1rQV1vw0WVsNil_xrV25aWAc"
+PROVIDER_TOKEN = "284685063:TEST:YTFkN2IzNmI1MWUz"
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -116,6 +116,7 @@ async def check_event_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return NEW_USER
         if context.user_data["new_user"] == 1: # Existing User
             await complete_registration(update, context)
+            return ConversationHandler.END
         if context.user_data["new_user"] == 2: # User re-register for the same event
             return ConversationHandler.END
 
@@ -191,7 +192,8 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
     event_title = context.user_data["event_title"]
     data = {
         'user_id': user_id,
-        'event_title': event_title
+        'event_title': event_title,
+        'status' : 'pending'
     }
 
     endpoint_url = "http://localhost:3000"

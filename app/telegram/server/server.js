@@ -36,7 +36,7 @@ app.get("/viewEvents", (req, res) => {
   }
 });
 
-app.get("/getRegistrations/:event_title", (req, res) => {
+app.get("/getEventRegistrations/:event_title", (req, res) => {
   const event_title = req.params.event_title;
   try {
     getEventRegistrationsFirebase(event_title).then((result) => res.send(result));
@@ -82,23 +82,19 @@ app.post("/insertRegistration", (req, res) => {
   } catch (err) {
     console.log("/insertRegistration error", err)
   }
-})
+});
 
 app.get("/getRegistrations/:user_id", (req, res) => {
   const user_id = req.params.user_id;
   try {
-    getRegistrationsFirebase(user_id).then((result) => {
-      res.send(result);
-    });
+    getRegistrationsFirebase(user_id).then((result) => res.send(result));
   } catch (err) {
-    console.log("/getRegistrations", err);
+    console.log(err);
   }
 });
 
-// insertRegistrationFirebase({
-//   user_id: "123456789",
-//   event_title: "Hackathon",
-//   status: "pending",
+// getRegistrationsFirebase(52460092).then((result) => {
+//   console.log(result)
 // })
 
 // Start the Express.js web server
