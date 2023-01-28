@@ -5,10 +5,10 @@ require("dotenv").config({ path: "../../../.env" });
 const {
   getEventsFirebase,
   getUserFirebase, 
-  getEventRegistrationsFirebase,
   insertUserFirebase,
   insertRegistrationFirebase,
   getRegistrationFirebase,
+  getRegistrationsFirebase,
 } = require("./helpers/helpers");
 
 // Setup Express.js server
@@ -31,15 +31,6 @@ app.use((req, res, next) => {
 app.get("/viewEvents", (req, res) => {
   try {
     getEventsFirebase().then((result) => res.send(result));
-  } catch (err) {
-    console.log(err);
-  }
-});
-
-app.get("/getRegistrations/:event_id", (req, res) => {
-  const event_id = req.params.event_id;
-  try {
-    getEventRegistrationsFirebase(event_id).then((result) => res.send(result));
   } catch (err) {
     console.log(err);
   }
@@ -72,17 +63,6 @@ app.post("/uploadUserInfo", (req, res) => {
   }
 });
 
-app.get("/getUserInfo/:user_id", (req ,res) => {
-  const user_id = req.params.user_id;
-  try {
-    getUserFirebase(user_id).then((result) => {
-      res.send(result)
-    })
-  } catch (err) {
-    console.log(err)
-  }
-})
-
 app.post("/insertRegistration", (req, res) => {
   const { user_id, event_title } = req.body
   const registrationInfo = { user_id, event_title}
@@ -95,14 +75,14 @@ app.post("/insertRegistration", (req, res) => {
   }
 })
 
-app.get("/checkRegistration/:user_id", (req, res) => {
+app.get("/getRegistrations/:user_id", (req, res) => {
   const user_id = req.params.user_id;
   try {
-    getRegistrationFirebase(user_id).then((result) => {
+    getRegistrationsFirebase(user_id).then((result) => {
       res.send(result);
     });
   } catch (err) {
-    console.log("/checkRegistration", err);
+    console.log("/getRegistrations", err);
   }
 });
 

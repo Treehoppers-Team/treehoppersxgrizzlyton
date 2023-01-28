@@ -36,26 +36,6 @@ module.exports = {
         });
         return eventInfos;
     },
-    getEventRegistrationsFirebase : async (eventId) => {
-        const querySnapshot = await getDocs(collection(db, "registrations"));
-        const registrationInfos = [];
-        querySnapshot.forEach((doc) => {
-        if (doc.data().id === eventId) {
-            registrationInfos.push(doc.data());
-        }
-        });
-        return registrationInfos;
-    },
-    
-    insertUserFirebase : async (userInfo) => {
-        docData = {
-        handle: userInfo.user_handle,
-        name: userInfo.user_name,
-        contact: userInfo.user_contact,
-        };
-        // Doc ID needs to be a string
-        await setDoc(doc(db, "users", userInfo.user_id.toString()), docData);
-    },
     
     getUserFirebase : async (userId) => {
         const docRef = doc(db, "users", userId.toString());
@@ -65,6 +45,16 @@ module.exports = {
         } else {
         return {name: "No Such User Exists"}
         }
+    },
+
+    insertUserFirebase : async (userInfo) => {
+        docData = {
+        handle: userInfo.user_handle,
+        name: userInfo.user_name,
+        contact: userInfo.user_contact,
+        };
+        // Doc ID needs to be a string
+        await setDoc(doc(db, "users", userInfo.user_id.toString()), docData);
     },
     
     insertRegistrationFirebase : async (registrationInfo) => {
@@ -77,7 +67,7 @@ module.exports = {
         await addDoc(collection(db, "registrations"), docData);
     },
     
-    getRegistrationFirebase : async (userId) => {
+    getRegistrationsFirebase : async (userId) => {
         const registrationRef = collection(db, "registrations");
         // UserId needs to be converted from number to string prior to the check
         const filter = query(registrationRef, where("userId", "==", userId.toString()));
