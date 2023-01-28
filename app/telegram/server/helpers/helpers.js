@@ -36,11 +36,12 @@ module.exports = {
         });
         return eventInfos;
     },
-    getEventRegistrationsFirebase : async (eventId) => {
+
+    getEventRegistrationsFirebase : async (eventTitle) => {
         const querySnapshot = await getDocs(collection(db, "registrations"));
         const registrationInfos = [];
         querySnapshot.forEach((doc) => {
-        if (doc.data().id === eventId) {
+        if (doc.data().eventTitle === eventTitle) {
             registrationInfos.push(doc.data());
         }
         });

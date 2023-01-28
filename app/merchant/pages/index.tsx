@@ -4,7 +4,7 @@ import styles from "@/styles/Home.module.css";
 import Card from "@/components/card";
 import { useEffect, useState } from "react";
 import BasicStatistics from "@/components/stats";
-
+import { Box, Skeleton, SkeletonText } from "@chakra-ui/react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,29 +15,43 @@ export default function Home() {
   let cards: JSX.Element[] = [];
 
   function generateCards(events: string | any[]) {
-      for (let i = 0; i < events.length; i++) {
-        cards.push(
-          <div key={i} className="m-2">
-            <Card 
-            key={i} 
-            title={events[i].title} 
+    for (let i = 0; i < events.length; i++) {
+      cards.push(
+        <div key={i} className="m-2">
+          <Card
+            key={i}
+            title={events[i].title}
             description={events[i].description}
             price={events[i].price}
             time={events[i].time}
             venue={events[i].venue}
             capacity={events[i].capacity}
-            />
-          </div>
-        );
-      }
-      return cards
-
+          />
+        </div>
+      );
     }
-  
+    return cards;
+  }
 
   const cardSection = (body: any) => {
     return <div className="flex flex-wrap justify-center m-4">{body}</div>;
   };
+
+  let loadingCards: JSX.Element[] = [];
+  const generateLoadingCards = (body: any) => {
+    for (let i = 0; i < 4; i++) {
+      loadingCards.push(          <Box margin={4} padding="2" boxShadow="lg" bg="white" width={80}>
+      <Skeleton height={48}/>
+      <SkeletonText
+        mt="4"
+        noOfLines={8}
+        spacing="4"
+        skeletonHeight="4"
+      />
+    </Box>)
+    }
+    return loadingCards;
+  }
 
   // make an api call to /viewEvents to get all the events created by the merchant
   // then map the events to the card component
@@ -51,11 +65,11 @@ export default function Home() {
 
   useEffect(() => {
     getEvents().then((res) => {
-      console.log(res)
-      console.log(loading)
+      console.log(res);
+      console.log(loading);
       setEvents(res);
-    })
-  },[])
+    });
+  }, []);
 
   return (
     <>
@@ -67,10 +81,12 @@ export default function Home() {
       </Head>
 
       <main>
-        <BasicStatistics events={loading==false? events.length : 0}/>
-        {loading==false ? cardSection(generateCards(events)) : null}
+        <BasicStatistics events={loading == false ? events.length : 0} />
+        {loading == false ? (
+          cardSection(generateCards(events))
+        ) : ( cardSection(generateLoadingCards(loadingCards))
+        )}
       </main>
-
     </>
   );
 }

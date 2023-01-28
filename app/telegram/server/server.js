@@ -7,7 +7,6 @@ const {
  getUserFirebase, getEventRegistrationsFirebase,insertUserFirebase,
   insertRegistrationFirebase,
   getRegistrationFirebase,
-  getUserFirebase,
 } = require("./helpers/helpers");
 
 // Setup Express.js server
@@ -35,10 +34,10 @@ app.get("/viewEvents", (req, res) => {
   }
 });
 
-app.get("/getRegistrations/:event_id", (req, res) => {
-  const event_id = req.params.event_id;
+app.get("/getRegistrations/:event_title", (req, res) => {
+  const event_title = req.params.event_title;
   try {
-    getEventRegistrationsFirebase(event_id).then((result) => res.send(result));
+    getEventRegistrationsFirebase(event_title).then((result) => res.send(result));
   } catch (err) {
     console.log(err);
   }

@@ -1,57 +1,67 @@
 import React, { useState } from "react";
-import { storage,database } from "../firebaseConfig";
+import { database, storage } from "../firebaseConfig";
 import { setDoc, doc } from "firebase/firestore";
 import { ref, uploadBytes } from "firebase/storage";
 
-const RaffleForm = () => {
-  const [eventName, setEventName] = useState("");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
-  const [dateTime, setDateTime] = useState("");
-  const [venue, setVenue] = useState("");
-  const [capacity, setCapacity] = useState("");
-  const [image, setImage] = useState<File>();
+interface EventFormProps {
+    eventName2: string;
+    description2: string;
+    price2: string;
+    dateTime2: string;
+    venue2: string;
+    capacity2: string;
 
+}
+
+const RaffleForm = ({eventName2,description2,price2,dateTime2,venue2,capacity2}:EventFormProps) => {
+  const [eventName, setEventName] = useState(eventName2);
+  const [description, setDescription] = useState(description2);
+  const [price, setPrice] = useState(price2);
+  const [dateTime, setDateTime] = useState(dateTime2);
+  const [venue, setVenue] = useState(venue2);
+  const [capacity, setCapacity] = useState(capacity2);
+  const [image, setImage] = useState<File>();
+  function dateFormat(dateString: string | number | Date) {
+    let date = new Date(dateString);
+    return date.toLocaleString();
+  }
   function handleClick() {
     console.log(eventName, dateTime, venue, capacity, image);
-    uploadData({ title: eventName, description: description, price: price, time: dateTime, venue: venue, capacity: capacity},image!)
+    uploadData({ title: eventName, description: description, price: price, time: dateFormat(dateTime), venue: venue, maxSupply: capacity},image!)
   }
 
-  const storageRef = ref(storage, eventName + dateTime);
+  const storageRef = ref(storage, eventName + "-nft" + dateTime);
 
-  const uploadData = (data: { title: string; description: string; price: string; time: string; venue: string; capacity: string;} | undefined, image: File) => {
+
+  const uploadData = (data: { title: string; description: string; price: string; time: string; venue: string; maxSupply: string;} | undefined, image: File) => {
     // const dbInstance = collection(database, '/MerchantCollection');
     if (data) {
-      const dbInstance = doc(database, "/events", data.title + data.time);
+      const title = data.title + "-nft"
+      const dbInstance = doc(database, "/nfts", title + dateTime);
       setDoc(dbInstance, data).then(() => {
         window.location.reload()
         console.log("uploaded form data");
       });
-      // 'file' comes from the Blob or File API
-      uploadBytes(storageRef, image!).then((snapshot) => {
-        console.log('Uploaded a blob or file!');
-      });
+
+      if (image) {
+        uploadBytes(storageRef, image!).then((snapshot) => {
+          console.log('Uploaded a blob or file!');
+        });
+      }
+
     }
 
   };
-
+  const imageSrc = `https://firebasestorage.googleapis.com/v0/b/treehoppers-mynt.appspot.com/o/${eventName+dateTime}?alt=media&token=07ddd564-df85-49a5-836a-c63f0a4045d6`
   return (
-    <form className="w-2/3 bg-gray-100 p-6 rounded-lg shadow-md">
-      <div className="mb-4">
-        <label
-          className="block text-gray-700 font-medium mb-2"
-          htmlFor="event-name"
-        >
-          Event Name
-        </label>
-        <input
-          className="border border-gray-400 p-2 w-full rounded-md"
-          id="event-name"
-          type="text"
-          placeholder="Enter the event name"
-          value={eventName}
-          onChange={(e) => setEventName(e.target.value)}
+    <form className="bg-gray-100 p-4 rounded-lg shadow-md">
+                <img
+          className="rounded-t-lg h-48 w-full object-cover object-center"
+          src={imageSrc}
+          alt="event image"
         />
+      <div className="my-4">
+        <h1 className="text-2xl font-bold text-center">{eventName}</h1>
       </div>
       <div className="mb-4">
         <label
@@ -157,5 +167,3 @@ const RaffleForm = () => {
 };
 
 export default RaffleForm;
-
-

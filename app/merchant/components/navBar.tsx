@@ -36,6 +36,10 @@ interface MobileNavProps {
 }
 
 function MobileNav({ open, setOpen }: MobileNavProps) {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+	const loading = status === 'loading';
+  const isLoggedIn = !!session?.user;
   return (
     <div
       className={`absolute top-0 left-0 h-screen w-screen bg-white transform ${
@@ -73,17 +77,49 @@ function MobileNav({ open, setOpen }: MobileNavProps) {
         >
           About
         </Link>
-        <Link
-          className="text-xl font-normal my-4"
-          href="/raffle"
-          onClick={() =>
-            setTimeout(() => {
-              setOpen(!open);
-            }, 100)
-          }
-        >
-          Conduct Raffle
-        </Link>
+        <div className="flex flex-wrap">
+            {loading ? null : (
+              <>
+                {/* {session?.user?.image ? (
+                  <Image
+                    height={32}
+                    width={32}
+                    src={session?.user?.image}
+                    alt=""
+                  />
+                ) : null} */}
+                <button
+                  className="bg-[#00C48A] text-white font-bold py-2 px-4 rounded hover:bg-[#017250]"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (isLoggedIn) {
+                      router.push("/api/auth/signout");
+                      signOut();
+                    } else {
+                      router.push("/api/auth/signin");
+                      signIn();
+                    }
+                  }}
+                >
+                  {isLoggedIn ? "Sign out" : "Sign in"}
+                </button>
+                <div className="flex flex-wrap items-center m-1">
+                  {session?.user ? (
+                    <>
+                      <a>You are signed in as</a>&nbsp;
+                      <a className="font-bold">
+                        {session.user.email ?? session.user.name}
+                      </a>
+                    </>
+                  ) : (
+                    <a>You are not signed in</a>
+                  )}
+                </div>
+
+
+              </>
+            )}
+          </div>
 
       </div>
     </div>
@@ -97,7 +133,7 @@ export default function Navbar() {
 	const loading = status === 'loading';
   const isLoggedIn = !!session?.user;
   return (
-    <nav className="flex filter drop-shadow-md border-b border-black px-2 py-2 h-20 items-center">
+    <nav className="flex filter bg-blackdrop-shadow-md border-b border-black px-2 py-2 h-20 items-center">
       <MobileNav open={open} setOpen={setOpen} />
       <div className="w-1/2 flex flex-wrap items-center">
         {/* <a className="text-2xl font-semibold" href="/">LOGO</a> */}
@@ -138,7 +174,6 @@ export default function Navbar() {
 
         <div className="hidden md:flex">
           <NavLink to="/createEvent">Create Event</NavLink>
-          <NavLink to="/raffle">Conduct Raffle</NavLink>
           <NavLink to="/about">About</NavLink>
           <div className="flex flex-wrap">
             {loading ? null : (
@@ -151,7 +186,21 @@ export default function Navbar() {
                     alt=""
                   />
                 ) : null} */}
-
+                <button
+                  className="bg-[#00C48A] text-white font-bold py-2 px-4 rounded hover:bg-[#017250]"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (isLoggedIn) {
+                      router.push("/api/auth/signout");
+                      signOut();
+                    } else {
+                      router.push("/api/auth/signin");
+                      signIn();
+                    }
+                  }}
+                >
+                  {isLoggedIn ? "Sign out" : "Sign in"}
+                </button>
                 <div className="flex flex-wrap items-center m-1">
                   {session?.user ? (
                     <>
@@ -165,23 +214,7 @@ export default function Navbar() {
                   )}
                 </div>
 
-                <Button
-                  variant="solid"
-                  colorScheme="blue"
-                  as="a"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (isLoggedIn) {
-                      router.push("/api/auth/signout");
-                      signOut();
-                    } else {
-                      router.push("/api/auth/signin");
-                      signIn();
-                    }
-                  }}
-                >
-                  {isLoggedIn ? "Sign out" : "Sign in"}
-                </Button>
+
               </>
             )}
           </div>

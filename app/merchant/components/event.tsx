@@ -14,6 +14,7 @@ import EditForm from "./editForm";
 import { database } from "@/firebaseConfig";
 import { deleteDoc, doc } from "firebase/firestore";
 import Link from "next/link";
+import RaffleForm from "./raffleForm";
 
 interface CardProps {
   title: string;
@@ -32,7 +33,8 @@ export default function Card({
   venue,
   capacity,
 }: CardProps) {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isOpenEditModal, onOpen: onOpenEditModal, onClose: onCloseEditModal } = useDisclosure();
+  const { isOpen: isOpenRaffleModal, onOpen: onOpenRaffleModal, onClose: onCloseRaffleModal } = useDisclosure();
   const [deleted, setDeleted] = useState(false);
 
   function dateFormat(dateString: string | number | Date) {
@@ -43,7 +45,7 @@ export default function Card({
   async function handleDelete() {
     await deleteDoc(doc(database, "events", title + time));
     setDeleted(true);
-    window.location.reload()
+    window.location.reload();
   }
 
   const imageSrc = `https://firebasestorage.googleapis.com/v0/b/treehoppers-mynt.appspot.com/o/${
@@ -56,8 +58,7 @@ export default function Card({
         className={
           deleted
             ? "invisible absolute"
-            : "" +
-              "w-full bg-gray-100 rounded-lg justify-center ml-4 my-2 mr-2"
+            : "" + "w-full bg-gray-100 rounded-lg justify-center m-2"
         }
       >
         <img
@@ -121,9 +122,28 @@ export default function Card({
           <div className="flex items-center justify-between">
             <span className="text-2xl font-bold text-gray-900">${price}</span>
             <div className="flex justify-end">
-              
               <button
-                onClick={onOpen}
+                onClick={onOpenRaffleModal}
+                className="flex flex-wrap items-center mx-1 text-white bg-green-500 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-6 h-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+                  />
+                </svg>{" "}
+                Conduct Raffle
+              </button>
+              <button
+                onClick={onOpenEditModal}
                 className="mx-1 text-white bg-black hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center"
               >
                 <svg
@@ -166,7 +186,7 @@ export default function Card({
         </div>
 
         <div className="w-full flex flex-col justify-center">
-          <Modal isOpen={isOpen} onClose={onClose}>
+          <Modal isOpen={isOpenEditModal} onClose={onCloseEditModal}>
             <ModalOverlay />
             <ModalContent>
               <ModalHeader>Edit Event</ModalHeader>
@@ -185,7 +205,33 @@ export default function Card({
               <ModalFooter>
                 <button
                   className="w-full my-2 mx-auto text-white bg-red-500 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-                  onClick={onClose}
+                  onClick={onCloseEditModal}
+                >
+                  Close
+                </button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
+          <Modal isOpen={isOpenRaffleModal} onClose={onCloseRaffleModal}>
+            <ModalOverlay />
+            <ModalContent>
+              <ModalHeader>Confirm Event NFT Data</ModalHeader>
+              <ModalCloseButton />
+              <ModalBody>
+                <RaffleForm
+                  eventName2={title}
+                  description2={description}
+                  price2={price}
+                  dateTime2={time}
+                  venue2={venue}
+                  capacity2={capacity}
+                />
+              </ModalBody>
+
+              <ModalFooter>
+                <button
+                  className="w-full my-2 mx-auto text-white bg-red-500 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+                  onClick={onCloseRaffleModal}
                 >
                   Close
                 </button>
