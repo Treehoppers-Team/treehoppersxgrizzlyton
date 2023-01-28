@@ -14,8 +14,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-TELE_TOKEN_TEST = "5756526738:AAFw_S43pkP1rQV1vw0WVsNil_xrV25aWAc"
-PROVIDER_TOKEN = "284685063:TEST:YTFkN2IzNmI1MWUz"
+TELE_TOKEN_TEST = os.getenv('TELE_TOKEN_TEST')
+PROVIDER_TOKEN = os.getenv('TEST_PAYMENT_TOKEN')
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -228,6 +228,7 @@ async def check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE)
     endpoint_url = "http://localhost:3000"
     response = requests.get(endpoint_url + f"/getRegistrations/{user_id}")
     response_data = response.json()
+
 
     # Format Response data
     text = ""
