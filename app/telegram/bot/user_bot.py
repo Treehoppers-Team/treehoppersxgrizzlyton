@@ -14,9 +14,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-TELE_TOKEN_TEST = os.getenv('TELE_TOKEN_TEST')
-PROVIDER_TOKEN = os.getenv('TEST_PAYMENT_TOKEN')
-
+TELE_TOKEN_TEST = "5756526738:AAFw_S43pkP1rQV1vw0WVsNil_xrV25aWAc"
+PROVIDER_TOKEN = "284685063:TEST:YTFkN2IzNmI1MWUz"
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -265,7 +264,7 @@ async def make_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     endpoint_url = "http://localhost:3000"
     # First check if user has any registration
-    response = requests.get(endpoint_url + f"/checkRegistration/{user_id}")
+    response = requests.get(endpoint_url + f"/getRegistrations/{user_id}")
     response_data = response.json()
     # Then check if any of these registrations were successful
     response_data = [registration for registration in response_data if registration['status'] != "pending"]
