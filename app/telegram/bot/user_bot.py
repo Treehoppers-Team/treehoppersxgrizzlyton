@@ -23,7 +23,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-REGISTER, NEW_USER = range(2)
+REGISTER, NEW_USER, PROCEED_PAYMENT = range(3)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -52,7 +52,6 @@ async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
 view_events: View ongoing events
 =============================================================================================
 """
-
 
 async def view_events(update: Update, context: ContextTypes.DEFAULT_TYPE):
     endpoint_url = "http://localhost:3000"
@@ -85,11 +84,11 @@ async def view_events(update: Update, context: ContextTypes.DEFAULT_TYPE):
 register_for_event: Prompt user for event title
 check_event_title: Validate event title provided
 check_existing_user: Prompt new users for contact info & check if
-    existing users have already registered for the event
+                    existing users have already registered for the event
+register_new_user: Save records of new Users in user DB
 complete_registration: Send API request with registration details
 =============================================================================================
 """
-
 
 async def register_for_event(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -113,10 +112,11 @@ async def check_event_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Save event_title in context object
         context.user_data["event_title"] = event_title
         context.user_data["new_user"] = await check_existing_user(update, context)
-        if context.user_data["new_user"]:
+        if context.user_data["new_user"] == 0: # New User
             return NEW_USER
-        else:
+        if context.user_data["new_user"] == 1: # Existing User
             await complete_registration(update, context)
+        if context.user_data["new_user"] == 2: # User re-register for the same event
             return ConversationHandler.END
 
     else:
@@ -137,15 +137,13 @@ async def check_existing_user(update: Update, context: CallbackContext):
         await update.message.reply_text( 
             'Please input your name and contact number in this format `name : contact`'
         )
-        return True
+        return 0
 
     # If user exists, check if they have already registered for the event
     else:
-        print("Existing user")
-        logger.info(f'Checking status for {user_id}')
-
+        logger.info(f'Checking registered events for {user_id}')
         endpoint_url = "http://localhost:3000"
-        response = requests.get(endpoint_url + f"/checkRegistration/{user_id}")
+        response = requests.get(endpoint_url + f"/getRegistrations/{user_id}")
         response_data = response.json()
 
         event_title = context.user_data["event_title"]
@@ -157,17 +155,14 @@ async def check_existing_user(update: Update, context: CallbackContext):
                 f'You have already registered for Event: {event_title} \n' 
                 'You can only register once per event'
             )
-            return ConversationHandler.END
+            # Value used to flag out user re-registering for the same event
+            return 2 
         else:
-            context.user_data["new_user"] = False
-            await update.message.reply_text(
-                f'Proceeding with your registration for: {event_title} \n' 
-            )
-            return False
+            # Value used to flag out existing user registering for new event
+            return 1 
 
 
 async def register_new_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    print("Registering New user")
     user_info = update.message.text.split(': ')
     user_id = update.message.from_user.id
     user_handle = update.message.from_user.username
@@ -179,6 +174,7 @@ async def register_new_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'user_name': user_name,
         'user_contact': user_contact,
     }
+    logger.info(f'Saving records of new user {user_id}')
 
     endpoint_url = "http://localhost:3000"
     response = requests.post(endpoint_url + "/uploadUserInfo", json=data)
@@ -188,6 +184,7 @@ async def register_new_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await complete_registration(update, context)
         return ConversationHandler.END
+
 
 async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
@@ -210,13 +207,12 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
             f'Sorry, there was an error with your registration. Please try again later'
         )
         return ConversationHandler.END
+
 """"
 =============================================================================================
-check_registration: Send API request with user's telegram ID to view events 
-registered and their respective statuses
+check_registration: View events that user has registered for and their respective statuses
 =============================================================================================
 """
-
 
 async def check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
@@ -228,7 +224,7 @@ async def check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE)
     logger.info(f'Checking status for {user_id}')
 
     endpoint_url = "http://localhost:3000"
-    response = requests.get(endpoint_url + f"/checkRegistration/{user_id}")
+    response = requests.get(endpoint_url + f"/getRegistrations/{user_id}")
     response_data = response.json()
 
     # Format Response data
@@ -251,6 +247,71 @@ async def check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE)
     )
     return ConversationHandler.END
 
+""""
+=============================================================================================
+make_payment: Send API request to payments API to make payments for successful events
+=============================================================================================
+"""
+async def make_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text='Checking for any registration in our records'
+    )
+    user_id = update.message.from_user.id
+    logger.info(f'Checking for successful registration for {user_id}')
+
+    endpoint_url = "http://localhost:3000"
+    # First check if user has any registration
+    response = requests.get(endpoint_url + f"/checkRegistration/{user_id}")
+    response_data = response.json()
+    # Then check if any of these registrations were successful
+    response_data = [registration for registration in response_data if registration['status'] != "pending"]
+    # Format Response data
+    text = ""
+    # Checks if any events registered
+    if response_data:
+        
+        text += "Congradulations! These are your successful events:\n\n"
+        event_titles = []
+        for event in response_data:
+            event_title = event['eventTitle']
+            event_titles.append(event_title)
+            text += f"Event Title: *{event_title}*\n"
+        
+        text += "\nWhich Event would you like to make payment for?\n\n"
+        # Save list of successful events
+        context.user_data["event_titles"] = event_titles
+        await update.message.reply_text(
+        text, parse_mode='Markdown'
+        )
+        return PROCEED_PAYMENT
+    else:
+        text += "No successful events found! Use /register to register for an event!"
+        await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text= text,
+        parse_mode= 'Markdown'
+        )
+        return ConversationHandler.END
+
+
+async def proceed_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Check for valid event title
+    event_title = update.message.text
+    event_titles = context.user_data["event_titles"]
+    if event_title in event_titles:
+        await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text='Input Stripe API call here'
+        )
+        return ConversationHandler.END # Change state here depending on stripe call
+    else:
+        await update.message.reply_text(
+        text='Thats not a valid title name'
+        )
+        # TODO: Handle case to prompt for event name again
+        return ConversationHandler.END
+
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(TELE_TOKEN_TEST).build()
@@ -261,11 +322,13 @@ if __name__ == '__main__':
             CommandHandler('cancel', cancel),
             CommandHandler('viewEvents', view_events),
             CommandHandler('register', register_for_event),
-            CommandHandler('checkRegistration', check_registration)
+            CommandHandler('checkRegistration', check_registration),
+            CommandHandler('makePayment', make_payment)
         ],
         states={
             REGISTER: [MessageHandler(filters.TEXT, check_event_title)],
             NEW_USER: [MessageHandler(filters.Regex('^([A-Za-z ]+): ([0-9A-Za-z.+-]+)$'), register_new_user)],
+            PROCEED_PAYMENT: [MessageHandler(filters.TEXT, proceed_payment)],
         },
         fallbacks=[MessageHandler(filters.TEXT, unknown)]
     )
