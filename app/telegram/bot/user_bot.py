@@ -14,8 +14,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-TELE_TOKEN_TEST = "5756526738:AAFw_S43pkP1rQV1vw0WVsNil_xrV25aWAc"
-PROVIDER_TOKEN = "284685063:TEST:YTFkN2IzNmI1MWUz"
+TELE_TOKEN_TEST = os.getenv("TELE_TOKEN_TEST")
+PROVIDER_TOKEN = os.getenv("PROVIDER_TOKEN")
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -296,6 +296,8 @@ async def proceed_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     event_title = update.message.text
     successful_event_titles = context.user_data["successful_registrations"]
     if event_title in successful_event_titles:
+        # Saves event title to context
+        context.user_data["event_title"] = event_title
         await context.bot.send_invoice(
             chat_id=update.effective_chat.id, 
             title=f"Payment for event: {event_title}", 
@@ -325,8 +327,10 @@ async def precheckout(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def successful_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Confirms the successful payment."""
+    event_title = context.user_data["event_title"]
     # Send payment info to endpoint for storage on firebase
-    await update.message.reply_text("Thank you for your payment!")
+    await update.message.reply_text(f"Thank you for your payment! See you for {event_title}")
+    return ConversationHandler.END
 
 
 if __name__ == '__main__':
@@ -351,8 +355,6 @@ if __name__ == '__main__':
     application.add_handler(conversation_handler)
     application.add_handler(MessageHandler(filters.TEXT, unknown))
     application.add_handler(PreCheckoutQueryHandler(precheckout))
-    application.add_handler(
-        MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment)
-    )
+    application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment))
 
     application.run_polling()
