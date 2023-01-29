@@ -9,6 +9,7 @@ const {
   insertRegistrationFirebase,
   getRegistrationFirebase,
   getRegistrationsFirebase,
+  getSuccessfulRegistrationsFirebase,
 } = require("./helpers/helpers");
 
 // Setup Express.js server
@@ -83,6 +84,17 @@ app.get("/getRegistrations/:user_id", (req, res) => {
     });
   } catch (err) {
     console.log("/getRegistrations", err);
+  }
+});
+
+app.get("/getSuccessfulRegistrations/:user_id", (req, res) => {
+  const user_id = req.params.user_id;
+  try {
+    getSuccessfulRegistrationsFirebase(user_id).then((result) => {
+      res.send(result);
+    });
+  } catch (err) {
+    console.log("/getSuccessfulRegistrations", err);
   }
 });
 

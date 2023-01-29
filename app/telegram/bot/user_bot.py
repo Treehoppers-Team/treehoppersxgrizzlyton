@@ -201,6 +201,7 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
         await update.message.reply_text(
             f'Thank you for registering! We`ll be contacting you shortly'
         )
+        logger.info(f'User {user_id} successfully registered for event: {event_title}')
         return ConversationHandler.END
     else:
         await update.message.reply_text(
@@ -249,7 +250,10 @@ async def check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 """"
 =============================================================================================
-make_payment: Send API request to payments API to make payments for successful events
+make_payment: Check for successful registrations and prompt for event to make payment for
+proceed_payment: Validate event title and send invoice
+pre_checkout: Validate invoice payload to confirm transaction
+successful_payment: Inform user of successful payment
 =============================================================================================
 """
 async def make_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -261,56 +265,66 @@ async def make_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f'Checking for successful registration for {user_id}')
 
     endpoint_url = "http://localhost:3000"
-    # First check if user has any registration
-    response = requests.get(endpoint_url + f"/checkRegistration/{user_id}")
+    response = requests.get(endpoint_url + f"/getSuccessfulRegistrations/{user_id}")
     response_data = response.json()
-    # Then check if any of these registrations were successful
-    response_data = [registration for registration in response_data if registration['status'] != "pending"]
-    # Format Response data
+
     text = ""
-    # Checks if any events registered
     if response_data:
         
-        text += "Congradulations! These are your successful events:\n\n"
-        event_titles = []
+        text += "Congragulations! Your registration is successful for the following events:\n\n"
+        successful_event_titles = []
         for event in response_data:
             event_title = event['eventTitle']
-            event_titles.append(event_title)
+            successful_event_titles.append(event_title)
             text += f"Event Title: *{event_title}*\n"
         
         text += "\nWhich Event would you like to make payment for?\n\n"
         # Save list of successful events
-        context.user_data["event_titles"] = event_titles
-        await update.message.reply_text(
-        text, parse_mode='Markdown'
-        )
+        context.user_data["successful_registrations"] = successful_event_titles
+        await update.message.reply_text(text, parse_mode='Markdown')
         return PROCEED_PAYMENT
     else:
-        text += "No successful events found! Use /register to register for an event!"
-        await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text= text,
-        parse_mode= 'Markdown'
-        )
+        text += "No successful events found! Use /checkRegistration view your registration status!"
+        await update.message.reply_text(text)
         return ConversationHandler.END
 
 
 async def proceed_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Check for valid event title
     event_title = update.message.text
-    event_titles = context.user_data["event_titles"]
-    if event_title in event_titles:
-        await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text='Input Stripe API call here'
+    successful_event_titles = context.user_data["successful_registrations"]
+    if event_title in successful_event_titles:
+        await context.bot.send_invoice(
+            chat_id=update.effective_chat.id, 
+            title=f"Payment for event: {event_title}", 
+            description="Ticket price includes registration fee, food & drinks, etc", 
+            payload="Custom-Payload", 
+            provider_token=PROVIDER_TOKEN, 
+            currency="SGD", 
+            prices=[LabeledPrice("Ticket Price", 5  * 100)]
         )
-        return ConversationHandler.END # Change state here depending on stripe call
     else:
         await update.message.reply_text(
-        text='Thats not a valid title name'
+        text='Thats not a valid title name. Please provide a valid title'
         )
-        # TODO: Handle case to prompt for event name again
-        return ConversationHandler.END
+        return PROCEED_PAYMENT
+
+
+async def precheckout(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Answers the PreQecheckoutQuery"""
+    query = update.pre_checkout_query
+    # check the payload
+    if query.invoice_payload != "Custom-Payload":
+        # answer False pre_checkout_query
+        await query.answer(ok=False, error_message="Something went wrong...")
+    else:
+        await query.answer(ok=True)
+
+
+async def successful_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Confirms the successful payment."""
+    # Send payment info to endpoint for storage on firebase
+    await update.message.reply_text("Thank you for your payment!")
 
 
 if __name__ == '__main__':
@@ -334,5 +348,9 @@ if __name__ == '__main__':
     )
     application.add_handler(conversation_handler)
     application.add_handler(MessageHandler(filters.TEXT, unknown))
+    application.add_handler(PreCheckoutQueryHandler(precheckout))
+    application.add_handler(
+        MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment)
+    )
 
     application.run_polling()
