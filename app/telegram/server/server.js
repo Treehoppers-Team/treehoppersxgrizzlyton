@@ -9,6 +9,8 @@ const {
   insertRegistrationFirebase,
   getRegistrationsFirebase,
   getSuccessfulRegistrationsFirebase,
+  insertPaymentFirebase,
+  getUserWalletFirebase,
 } = require("./helpers/helpers");
 
 // Setup Express.js server
@@ -103,6 +105,30 @@ app.get("/getSuccessfulRegistrations/:user_id", (req, res) => {
     console.log("/getSuccessfulRegistrations", err);
   }
 });
+
+app.post("/insertPayment", (req, res) => {
+  const { user_id, event_title } = req.body
+  const paymentInfo = { user_id, event_title }
+  try {
+    insertPaymentFirebase(paymentInfo).then(() => {
+      res.status(200).json({ message: "User successfully paid for the event" })
+    })
+  } catch (err) {
+    console.log("/insertPayment error", err)
+  }
+})
+
+app.post("/mintNft", (req, res) => {
+  const { user_id, event_title } = req.body
+  try {
+    getUserWalletFirebase(user_id).then(result => {
+      console.log(result)
+      res.status(200).json({ message: "User successfully paid for the event" })
+    })
+  } catch (err) {
+    console.log("/mintNft error ", err)
+  }
+})
 
 // Start the Express.js web server
 app.listen(port, () => console.log(`Express.js API listening on port ${port}`));

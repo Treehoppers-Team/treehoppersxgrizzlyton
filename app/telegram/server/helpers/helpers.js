@@ -1,3 +1,4 @@
+const { Keypair, Connection, LAMPORTS_PER_SOL } = require("@solana/web3.js");
 const firebase = require("firebase/app");
 const { initializeApp } = require("firebase/app");
 const {
@@ -10,7 +11,9 @@ const {
   addDoc,
   query,
   where,
+  updateDoc,
 } = require("firebase/firestore");
+require("dotenv").config({ path: "../../../../.env" });
 
 const firebaseConfig = {
   apiKey: "AIzaSyAkhEEbHzLsVNnl6iVJtXegV9zuljKB5i8",
@@ -22,6 +25,7 @@ const firebaseConfig = {
 };
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
+const CUSTOM_DEVNET_RPC = process.env.CUSTOM_DEVNET_RPC;
 
 // Firebase Methods
 module.exports = {
@@ -99,4 +103,102 @@ module.exports = {
     });
     return registrationInfos;
   },
+
+  insertPaymentFirebase: async (paymentInfo) => {
+    const registrationCol = collection(db, "registrations");
+    // UserId needs to be converted from number to string prior to the check
+    const filter = query(
+      registrationCol,
+      where("userId", "==", paymentInfo.user_id.toString()),
+      where("eventTitle", "==", paymentInfo.event_title)
+    );
+    const querySnapshot = await getDocs(filter);
+
+    // Retrieve the document ID
+    const documentId = [];
+    querySnapshot.forEach((doc) => {
+      const docId = doc.id;
+      documentId.push(docId);
+    });
+
+    // Update the payment field of the registration doc
+    const registrationRef = doc(db, "registrations", documentId[0]);
+    await updateDoc(registrationRef, {
+      paymentMade: true
+    });
+    return { result: "Paymen info successfully saved" };
+  },
+
+  // createUserWalletFirebase: async (userId) => {
+  //   try {
+  //     // Generate keypair and airdrop some SOL to user account
+  //     const keypair = new Keypair();
+  //     const publicKey = keypair.publicKey;
+  //     const privateKey = keypair.secretKey;
+  
+  //     const customConnection = new Connection(CUSTOM_DEVNET_RPC)
+  //     const airdrop = await customConnection.requestAirdrop(publicKey, 2 * LAMPORTS_PER_SOL)
+  //     console.log("Airdrop transaction: ", airdrop)
+
+  //     // Save public & private key in user's record
+  //     const userRef = doc(db, "users", userId.toString());
+  //     await updateDoc(userRef, {
+  //       publicKey: publicKey.toString(),
+  //       privateKey: Array.from(privateKey),
+  //     });
+
+  //     return {publicKey, privateKey}
+  //   } catch (err) {
+  //     console.log("createUserWalletFirebase error ", err)
+  //   }
+  // },
+
+  getUserWalletFirebase: async (userId) => {
+
+    const createUserWalletFirebase = async (userId) => {
+      try {
+        // Generate keypair and airdrop some SOL to user account
+        const keypair = new Keypair();
+        const publicKey = keypair.publicKey;
+        const privateKey = keypair.secretKey;
+    
+        const customConnection = new Connection(CUSTOM_DEVNET_RPC)
+        const airdrop = await customConnection.requestAirdrop(publicKey, 2 * LAMPORTS_PER_SOL)
+        console.log("Airdrop transaction: ", airdrop)
+    
+        // Save public & private key in user's record
+        const userRef = doc(db, "users", userId.toString());
+        await updateDoc(userRef, {
+          publicKey: publicKey.toString(),
+          privateKey: Array.from(privateKey),
+        });
+    
+        return {publicKey, privateKey}
+      } catch (err) {
+        console.log("createUserWalletFirebase error ", err)
+      }
+    }
+
+    try {
+      const docRef = doc(db, "users", userId.toString());
+      const docSnap = await getDoc(docRef);
+      const userInfo = docSnap.data()
+      if ('publicKey' in userInfo && 'privateKey' in userInfo) {
+        const rawPrivateKey = userInfo.privateKey
+        const privateKeyArray = Uint8Array.from(
+          Object.entries(rawPrivateKey).map(([key, value]) => value)
+        );
+        const userKeyPair = Keypair.fromSecretKey(privateKeyArray)
+        const publicKey = userKeyPair.publicKey;
+        const privateKey = userKeyPair.secretKey;
+        return {publicKey, privateKey}
+      }
+      else {
+        const walletKeys = await createUserWalletFirebase(userId)
+        return walletKeys
+      }
+    } catch (err) {
+      console.log("getUserWalletFirebase error ", err)
+    }
+  }
 };

@@ -52,6 +52,7 @@ view_events: View ongoing events
 =============================================================================================
 """
 
+
 async def view_events(update: Update, context: ContextTypes.DEFAULT_TYPE):
     endpoint_url = "http://localhost:3000"
     response = requests.get(endpoint_url + "/viewEvents")
@@ -89,6 +90,7 @@ complete_registration: Send API request with registration details
 =============================================================================================
 """
 
+
 async def register_for_event(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         'Please provide the title of the Event that you would like to register for'
@@ -111,12 +113,13 @@ async def check_event_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Save event_title in context object
         context.user_data["event_title"] = event_title
         context.user_data["new_user"] = await check_existing_user(update, context)
-        if context.user_data["new_user"] == 0: # New User
+        if context.user_data["new_user"] == 0:  # New User
             return NEW_USER
-        if context.user_data["new_user"] == 1: # Existing User
+        if context.user_data["new_user"] == 1:  # Existing User
             await complete_registration(update, context)
             return ConversationHandler.END
-        if context.user_data["new_user"] == 2: # User re-register for the same event
+        # User re-register for the same event
+        if context.user_data["new_user"] == 2:
             return ConversationHandler.END
 
     else:
@@ -134,7 +137,7 @@ async def check_existing_user(update: Update, context: CallbackContext):
 
     # If user does not exists, prompt for their name and contact
     if response_data['name'] == "No Such User Exists":
-        await update.message.reply_text( 
+        await update.message.reply_text(
             'Please input your name and contact number in this format `name : contact`'
         )
         return 0
@@ -152,14 +155,14 @@ async def check_existing_user(update: Update, context: CallbackContext):
             registered_events.append(registration_details["eventTitle"])
         if event_title in registered_events:
             await update.message.reply_text(
-                f'You have already registered for Event: {event_title} \n' 
+                f'You have already registered for Event: {event_title} \n'
                 'You can only register once per event'
             )
             # Value used to flag out user re-registering for the same event
-            return 2 
+            return 2
         else:
             # Value used to flag out existing user registering for new event
-            return 1 
+            return 1
 
 
 async def register_new_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -192,7 +195,7 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
     data = {
         'user_id': user_id,
         'event_title': event_title,
-        'status' : 'pending'
+        'status': 'pending'
     }
 
     endpoint_url = "http://localhost:3000"
@@ -202,7 +205,8 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
         await update.message.reply_text(
             f'Thank you for registering! We`ll be contacting you shortly'
         )
-        logger.info(f'User {user_id} successfully registered for event: {event_title}')
+        logger.info(
+            f'User {user_id} successfully registered for event: {event_title}')
         return ConversationHandler.END
     else:
         await update.message.reply_text(
@@ -216,6 +220,7 @@ check_registration: View events that user has registered for and their respectiv
 =============================================================================================
 """
 
+
 async def check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -228,7 +233,6 @@ async def check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE)
     endpoint_url = "http://localhost:3000"
     response = requests.get(endpoint_url + f"/getRegistrations/{user_id}")
     response_data = response.json()
-
 
     # Format Response data
     text = ""
@@ -258,6 +262,8 @@ pre_checkout: Validate invoice payload to confirm transaction
 successful_payment: Inform user of successful payment
 =============================================================================================
 """
+
+
 async def make_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -267,21 +273,22 @@ async def make_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f'Checking for successful registration for {user_id}')
 
     endpoint_url = "http://localhost:3000"
-    response = requests.get(endpoint_url + f"/getSuccessfulRegistrations/{user_id}")
+    response = requests.get(
+        endpoint_url + f"/getSuccessfulRegistrations/{user_id}")
     response_data = response.json()
 
     text = ""
     if response_data:
-        
+
         text += "Congragulations! Your registration is successful for the following events:\n\n"
         successful_event_titles = []
         for event in response_data:
             event_title = event['eventTitle']
             successful_event_titles.append(event_title)
             text += f"Event Title: *{event_title}*\n"
-        
+
         text += "\nWhich Event would you like to make payment for?\n\n"
-        # Save list of successful events
+        # Save list of successful event registrations
         context.user_data["successful_registrations"] = successful_event_titles
         await update.message.reply_text(text, parse_mode='Markdown')
         return PROCEED_PAYMENT
@@ -299,17 +306,17 @@ async def proceed_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Saves event title to context
         context.user_data["event_title"] = event_title
         await context.bot.send_invoice(
-            chat_id=update.effective_chat.id, 
-            title=f"Payment for event: {event_title}", 
-            description="Ticket price includes registration fee, food & drinks, etc", 
-            payload="Custom-Payload", 
-            provider_token=PROVIDER_TOKEN, 
-            currency="SGD", 
-            prices=[LabeledPrice("Ticket Price", 5  * 100)]
+            chat_id=update.effective_chat.id,
+            title=f"Payment for event: {event_title}",
+            description="Ticket price includes registration fee, food & drinks, etc",
+            payload="Custom-Payload",
+            provider_token=PROVIDER_TOKEN,
+            currency="SGD",
+            prices=[LabeledPrice("Ticket Price", 5 * 100)]
         )
     else:
         await update.message.reply_text(
-        text='Thats not a valid title name. Please provide a valid title'
+            text='Thats not a valid title name. Please provide a valid title'
         )
         return PROCEED_PAYMENT
 
@@ -327,10 +334,42 @@ async def precheckout(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def successful_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Confirms the successful payment."""
+    user_id = update.message.from_user.id
     event_title = context.user_data["event_title"]
-    # Send payment info to endpoint for storage on firebase
-    await update.message.reply_text(f"Thank you for your payment! See you for {event_title}")
-    return ConversationHandler.END
+    data = {
+        'user_id': user_id,
+        'event_title': event_title,
+    }
+    endpoint_url = "http://localhost:3000"
+    response = requests.post(endpoint_url + "/insertPayment", json=data)
+
+    logger.info(f'{user_id} has successfully made payment for {event_title}')
+    if response.status_code == 200:
+        await update.message.reply_text(f"Thank you for your payment! See you for {event_title}")
+        await mint_nft(update, context)
+        return ConversationHandler.END
+    else:
+        await update.message.reply_text(f"An unexpected error occured")
+        return ConversationHandler.END
+
+
+async def mint_nft(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+    event_title = context.user_data["event_title"]
+    data = {
+        'user_id': user_id,
+        'event_title': event_title,
+    }
+    endpoint_url = "http://localhost:3000"
+    response = requests.post(endpoint_url + "/mintNft", json=data)
+
+    logger.info(f'{user_id} has successfully minted NFT for {event_title}')
+    if response.status_code == 200:
+        await update.message.reply_text(
+            f"You have successfully minted the NFT required for the event. Use /redeem to redeem your NFT"
+        )
+    else:
+        await update.message.reply_text(f"An unexpected error occured")
 
 
 if __name__ == '__main__':
@@ -355,6 +394,7 @@ if __name__ == '__main__':
     application.add_handler(conversation_handler)
     application.add_handler(MessageHandler(filters.TEXT, unknown))
     application.add_handler(PreCheckoutQueryHandler(precheckout))
-    application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment))
+    application.add_handler(MessageHandler(
+        filters.SUCCESSFUL_PAYMENT, successful_payment))
 
     application.run_polling()
