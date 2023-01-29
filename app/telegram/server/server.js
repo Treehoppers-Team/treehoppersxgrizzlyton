@@ -7,7 +7,6 @@ const {
   getUserFirebase, 
   insertUserFirebase,
   insertRegistrationFirebase,
-  getRegistrationFirebase,
   getRegistrationsFirebase,
   getSuccessfulRegistrationsFirebase,
 } = require("./helpers/helpers");
@@ -32,6 +31,15 @@ app.use((req, res, next) => {
 app.get("/viewEvents", (req, res) => {
   try {
     getEventsFirebase().then((result) => res.send(result));
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+app.get("/getEventRegistrations/:event_title", (req, res) => {
+  const event_title = req.params.event_title;
+  try {
+    getEventRegistrationsFirebase(event_title).then((result) => res.send(result));
   } catch (err) {
     console.log(err);
   }
@@ -65,8 +73,8 @@ app.post("/uploadUserInfo", (req, res) => {
 });
 
 app.post("/insertRegistration", (req, res) => {
-  const { user_id, event_title } = req.body
-  const registrationInfo = { user_id, event_title}
+  const { user_id, event_title, status } = req.body
+  const registrationInfo = { user_id, event_title, status}
   try {
     insertRegistrationFirebase(registrationInfo).then(() => {
       res.status(200).json({ message: "User successfully registered for event" })
@@ -74,16 +82,14 @@ app.post("/insertRegistration", (req, res) => {
   } catch (err) {
     console.log("/insertRegistration error", err)
   }
-})
+});
 
 app.get("/getRegistrations/:user_id", (req, res) => {
   const user_id = req.params.user_id;
   try {
-    getRegistrationsFirebase(user_id).then((result) => {
-      res.send(result);
-    });
+    getRegistrationsFirebase(user_id).then((result) => res.send(result));
   } catch (err) {
-    console.log("/getRegistrations", err);
+    console.log(err);
   }
 });
 

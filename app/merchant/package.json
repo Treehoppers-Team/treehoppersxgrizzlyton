@@ -26,6 +26,7 @@
     "@web3auth/solana-provider": "^4.2.2",
     "@web3auth/solana-wallet-connector-plugin": "^4.2.2",
     "@web3auth/solflare-adapter": "^4.2.2",
+    "axios": "^1.2.6",
     "eslint": "8.32.0",
     "eslint-config-next": "13.1.2",
     "firebase": "^9.16.0",

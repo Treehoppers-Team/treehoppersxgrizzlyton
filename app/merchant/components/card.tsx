@@ -10,6 +10,7 @@ import {
   ModalCloseButton,
   useDisclosure,
 } from "@chakra-ui/react";
+
 import EditForm from "./editForm";
 import { database } from "@/firebaseConfig";
 import { deleteDoc, doc } from "firebase/firestore";
@@ -32,7 +33,7 @@ export default function Card({
   venue,
   capacity,
 }: CardProps) {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isOpenEditModal, onOpen: onOpenEditModal, onClose: onCloseEditModal } = useDisclosure();
   const [deleted, setDeleted] = useState(false);
 
   function dateFormat(dateString: string | number | Date) {
@@ -56,7 +57,7 @@ export default function Card({
           deleted
             ? "invisible absolute"
             : "" +
-              "w-72 max-w-sm bg-gray-100 rounded-lg shadow-md justify-center border border-white hover:shadow-xl hover:border-black hover:-translate-y-1 transition ease-in-out"
+              "w-80 bg-gray-100 rounded-lg shadow-md justify-center border border-white hover:shadow-xl hover:border-black hover:-translate-y-1 transition ease-in-out"
         }
       >
         <img
@@ -141,7 +142,7 @@ export default function Card({
                 </svg>
               </Link>
               <button
-                onClick={onOpen}
+                onClick={onOpenEditModal}
                 className="mx-1 text-white bg-black hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center"
               >
                 <svg
@@ -183,7 +184,7 @@ export default function Card({
         </div>
 
         <div className="w-full flex flex-col justify-center">
-          <Modal isOpen={isOpen} onClose={onClose}>
+          <Modal isOpen={isOpenEditModal} onClose={onCloseEditModal}>
             <ModalOverlay />
             <ModalContent>
               <ModalHeader>Edit Event</ModalHeader>
@@ -202,7 +203,7 @@ export default function Card({
               <ModalFooter>
                 <button
                   className="w-full my-2 mx-auto text-white bg-red-500 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-                  onClick={onClose}
+                  onClick={onCloseEditModal}
                 >
                   Close
                 </button>

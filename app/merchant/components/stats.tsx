@@ -42,8 +42,8 @@ import {
       <Box maxW="7xl" mx={'auto'} pt={5} px={{ base: 2, sm: 12, md: 17 }}>
         <SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 5, lg: 8 }}>
           <StatsCard title={'Total Events'} stat={events.toString()} />
-          <StatsCard title={'NFTs Minted'} stat={'43'} />
-          <StatsCard title={'Revenue'} stat={'$1030'} />
+          <StatsCard title={'NFTs Minted'} stat={'0'} />
+          <StatsCard title={'Revenue'} stat={'$0'} />
         </SimpleGrid>
       </Box>
     );
