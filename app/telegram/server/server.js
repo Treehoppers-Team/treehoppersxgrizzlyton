@@ -11,12 +11,15 @@ const {
   getSuccessfulRegistrationsFirebase,
   insertPaymentFirebase,
   getUserWalletFirebase,
+  getNftInfoFirebase,
+  mintNft,
 } = require("./helpers/helpers");
 
 // Setup Express.js server
 const port = 3000;
 const app = express();
 const fs = require("fs");
+const { PublicKey, Keypair } = require("@solana/web3.js");
 app.use(bodyParser.json());
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -121,14 +124,29 @@ app.post("/insertPayment", (req, res) => {
 app.post("/mintNft", (req, res) => {
   const { user_id, event_title } = req.body
   try {
-    getUserWalletFirebase(user_id).then(result => {
-      console.log(result)
-      res.status(200).json({ message: "User successfully paid for the event" })
+    handleMint(user_id, event_title).then(result => {
+      console.log("/mintNft ")
+      res.status(200).json(result)
     })
   } catch (err) {
     console.log("/mintNft error ", err)
   }
 })
+
+const handleMint = async(userId, eventTitle) => {
+  const walletKeys = await getUserWalletFirebase(userId)
+  const userKeypair = Keypair.fromSecretKey(walletKeys.privateKey)
+  console.log("User Keypair: ", userKeypair)
+
+  const nftInfo = await getNftInfoFirebase(eventTitle)
+  console.log("Nft Info: ", nftInfo)
+
+  const { merchantKey, title, symbol, uri } = nftInfo[0]
+  const creatorKey = new PublicKey(merchantKey)
+
+  const mintTransaction = await mintNft(userKeypair, creatorKey, title, symbol, uri)
+  return mintTransaction
+}
 
 // Start the Express.js web server
 app.listen(port, () => console.log(`Express.js API listening on port ${port}`));

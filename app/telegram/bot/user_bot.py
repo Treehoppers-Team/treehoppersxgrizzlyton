@@ -362,6 +362,8 @@ async def mint_nft(update: Update, context: ContextTypes.DEFAULT_TYPE):
     }
     endpoint_url = "http://localhost:3000"
     response = requests.post(endpoint_url + "/mintNft", json=data)
+    response_data = response.json()
+    print(response_data)
 
     logger.info(f'{user_id} has successfully minted NFT for {event_title}')
     if response.status_code == 200:
@@ -369,7 +371,7 @@ async def mint_nft(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"You have successfully minted the NFT required for the event. Use /redeem to redeem your NFT"
         )
     else:
-        await update.message.reply_text(f"An unexpected error occured")
+        await update.message.reply_text(f"An unexpected error occurred")
 
 
 if __name__ == '__main__':
