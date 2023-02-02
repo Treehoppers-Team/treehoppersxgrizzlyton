@@ -45,7 +45,7 @@ const Content = () => {
             const requests = res2.map((r) => getUserInfo(r.userId));
             Promise.all(requests).then((data) => {
               for (let i = 0; i < data.length; i++) {
-                userData.push({status:res2[i].status,...data[i]});
+                userData.push({id:res2[i].userId,status:res2[i].status,...data[i]});
               }
               
               console.log("event", eventData);

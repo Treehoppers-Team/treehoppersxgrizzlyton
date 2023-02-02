@@ -36,6 +36,10 @@ interface MobileNavProps {
 }
 
 function MobileNav({ open, setOpen }: MobileNavProps) {
+  const [address, setAddress] = useState<string[]>([]);
+  const callback = (address: string[]) => {
+    setAddress(address);
+  };
   const { data: session, status } = useSession();
   const router = useRouter();
 	const loading = status === 'loading';
@@ -88,7 +92,7 @@ function MobileNav({ open, setOpen }: MobileNavProps) {
                     alt=""
                   />
                 ) : null} */}
-                <button
+                {/* <button
                   className="bg-[#00C48A] text-white font-bold py-2 px-4 rounded hover:bg-[#017250]"
                   onClick={(e) => {
                     e.preventDefault();
@@ -114,9 +118,9 @@ function MobileNav({ open, setOpen }: MobileNavProps) {
                   ) : (
                     <a>You are not signed in</a>
                   )}
-                </div>
+                </div> */}
 
-
+{/* <App callback={callback} /> */}
               </>
             )}
           </div>
@@ -127,6 +131,10 @@ function MobileNav({ open, setOpen }: MobileNavProps) {
 }
 
 export default function Navbar() {
+  const [address, setAddress] = useState<string[]>([]);
+  const callback = (address: string[]) => {
+    setAddress(address);
+  };
   const [open, setOpen] = useState(false);
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -186,7 +194,7 @@ export default function Navbar() {
                     alt=""
                   />
                 ) : null} */}
-                <button
+                {/* <button
                   className="bg-[#00C48A] text-white font-bold py-2 px-4 rounded hover:bg-[#017250]"
                   onClick={(e) => {
                     e.preventDefault();
@@ -212,7 +220,8 @@ export default function Navbar() {
                   ) : (
                     <a>You are not signed in</a>
                   )}
-                </div>
+                </div> */}
+                {/* <App callback={callback} /> */}
 
 
               </>

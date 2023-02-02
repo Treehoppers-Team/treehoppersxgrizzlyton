@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@pinata/sdk": "^2.1.0",
     "@project-serum/anchor": "^0.26.0",
     "@solana/spl-token": "^0.3.7",
     "@solana/web3.js": "^1.73.0",

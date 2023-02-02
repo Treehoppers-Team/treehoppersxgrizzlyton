@@ -15,6 +15,14 @@ import { database } from "@/firebaseConfig";
 import { deleteDoc, doc } from "firebase/firestore";
 import Link from "next/link";
 import RaffleForm from "./raffleForm";
+import dynamic from "next/dynamic";
+
+const App = dynamic(
+  () => {
+    return import("../pages/Web3Auth");
+  },
+  { ssr: false }
+);
 
 interface CardProps {
   title: string;
@@ -35,6 +43,10 @@ export default function Card({
   capacity,
   users
 }: CardProps) {
+  const [address, setAddress] = useState<string[]>([]);
+  const callback = (address: string[]) => {
+    setAddress(address);
+  };
   const { isOpen: isOpenEditModal, onOpen: onOpenEditModal, onClose: onCloseEditModal } = useDisclosure();
   const { isOpen: isOpenRaffleModal, onOpen: onOpenRaffleModal, onClose: onCloseRaffleModal } = useDisclosure();
   const [deleted, setDeleted] = useState(false);
@@ -220,6 +232,10 @@ export default function Card({
               <ModalHeader>Confirm Event NFT Data</ModalHeader>
               <ModalCloseButton />
               <ModalBody>
+                <div className="flex flex-wrap justify-center m-2">
+                <App callback={callback} />
+                </div>
+                
                 <RaffleForm
                   eventName2={title}
                   description2={description}
@@ -228,6 +244,7 @@ export default function Card({
                   venue2={venue}
                   capacity2={capacity}
                   users={users}
+                  address={address}
                 />
               </ModalBody>
 

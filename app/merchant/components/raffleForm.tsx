@@ -4,6 +4,8 @@ import { setDoc, doc } from "firebase/firestore";
 import { ref, uploadBytes } from "firebase/storage";
 import axios from "axios";
 
+const JWT="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJjODA1MzJhMC01YmU2LTQyZTItYmRlNS1hMTkwYWZkMzNkZjkiLCJlbWFpbCI6ImFkdmFpdC5iaGFyYXQuZGVzaHBhbmRlQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImlkIjoiRlJBMSIsImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxfSx7ImlkIjoiTllDMSIsImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxfV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiJhMTkyMTNjOGE4YzM1MGNiMjMwMCIsInNjb3BlZEtleVNlY3JldCI6IjA1YjcwMTY0OWEzMGUxOWY5NDE1MzY2OWE4MDNiYjczZGY4MTU5ODIxM2ZiNzlmM2MyYzk3MGViOWQyMjFlNmUiLCJpYXQiOjE2NzUzNzI0MjF9.mmLYahJJ-etF5u_sRdOyJ2irM7F848vMaJ_Z9rK2G0A"
+
 interface EventFormProps {
   eventName2: string;
   description2: string;
@@ -12,6 +14,7 @@ interface EventFormProps {
   venue2: string;
   capacity2: string;
   users: string[];
+  address: string[];
 }
 
 const RaffleForm = ({
@@ -22,13 +25,10 @@ const RaffleForm = ({
   venue2,
   capacity2,
   users,
+  address
 }: EventFormProps) => {
-  const [eventName, setEventName] = useState(eventName2);
-  const [description, setDescription] = useState(description2);
-  const [price, setPrice] = useState(price2);
-  const [dateTime, setDateTime] = useState(dateTime2);
-  const [venue, setVenue] = useState(venue2);
-  const [capacity, setCapacity] = useState(capacity2);
+
+  const [symbol, setSymbol] = useState("");
   const [image, setImage] = useState<File>();
 
   function dateFormat(dateString: string | number | Date) {
@@ -36,13 +36,55 @@ const RaffleForm = ({
     return date.toLocaleString();
   }
 
-  // function  {
-  //   const result = [];
-  //   for (let i = 0; i < amount; i++) {
-  //     result.push(users[Math.floor(Math.random() * users.length)]);
-  //   }
-  //   return result;
-  // }
+  const pinataMetadataUpload = async (data: any) => {
+    const res = await fetch('http://localhost:3000/uploadMetadata', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json, text/plain, */*',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+
+    const result = await res.text()
+    return result
+  }
+
+  const pinataUpload = async (image: any) => {
+    const formData: {
+      append: (arg0: string, arg1: any) => void;
+      _boundary: any;
+    } = new FormData() as any;
+    formData.append("file", image);
+
+    const metadata = JSON.stringify({
+      name: "File name",
+    });
+    formData.append("pinataMetadata", metadata);
+
+    const options = JSON.stringify({
+      cidVersion: 0,
+    });
+    formData.append("pinataOptions", options);
+
+    try {
+      const res = await axios.post(
+        "https://api.pinata.cloud/pinning/pinFileToIPFS",
+        formData,
+        {
+          maxBodyLength: Infinity,
+          headers: {
+            "Content-Type": `multipart/form-data; boundary=${formData._boundary}`,
+            Authorization: `Bearer ${JWT}`,
+          },
+        }
+      );
+      console.log(res.data.IpfsHash);
+      return res.data.IpfsHash;
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   function raffleSelect(users: any, amount: number) {
     const result = [];
@@ -60,7 +102,7 @@ const RaffleForm = ({
   
 
   async function conductRaffle() {
-    const amount = parseInt(capacity);
+    const amount = parseInt(capacity2);
     const winners = raffleSelect(users, amount);
     // find users in registration db and set status to success
     // make post request to /insertRegistration and in request body pass in userid and event title
@@ -68,7 +110,7 @@ const RaffleForm = ({
     for (let i = 0; i < winners.length; i++) {
       const data = {
         user_id: winners[i].id,
-        event_title: eventName,
+        event_title: eventName2,
         status: "success",
       };
 
@@ -84,32 +126,59 @@ const RaffleForm = ({
   }
 
   function handleClick() {
-    console.log(eventName, dateTime, venue, capacity, image);
-    uploadData(
-      {
-        title: eventName,
-        description: description,
-        price: price,
-        time: dateFormat(dateTime),
-        venue: venue,
-        maxSupply: capacity,
-      },
-      image!
-    );
-    conductRaffle();
-  }
+    console.log(eventName2, dateTime2, venue2, capacity2, image);
+      // Upload image to /uploadFile endpoint using Pinata
+      pinataUpload(image).then(async (hash) => {
+        const metadata = {
+          title: eventName2,
+          symbol: symbol,
+          description: description2,
+          image: `https://ipfs.io/ipfs/${hash}`,
+          attributes: [
+            { trait_type: "Date/Time", value: dateFormat(dateTime2) },
+            { trait_type: "Ticket Price", value: price2 },
+            { trait_type: "Venue", value: venue2 },
+          ],
+          properties: {
+            files: [
+              {
+                uri: `https://ipfs.io/ipfs/${hash}`,
+                type: "image/png",
+              },
+            ],
+            category: null,
+          },
+        };
+        console.log(metadata)
+        return metadata
+      }).then((data) => {
+        pinataMetadataUpload(data).then((res) => {
+          
+          uploadData(
+            {
+              merchantKey: address[0],
+              symbol: symbol,
+              title: eventName2,
+              uri: `https://ipfs.io/ipfs/${res}`,
+            },
+            image!
+          );
+          conductRaffle();
+        })
 
-  const storageRef = ref(storage, eventName + "-nft" + dateTime);
+      })
+}
+  
+
+  const storageRef = ref(storage, eventName2 + "-nft" + dateTime2);
 
   const uploadData = (
     data:
       | {
-          title: string;
-          description: string;
-          price: string;
-          time: string;
-          venue: string;
-          maxSupply: string;
+        merchantKey: string;
+        symbol: string;
+        title: string;
+        uri: string;
         }
       | undefined,
     image: File
@@ -117,9 +186,9 @@ const RaffleForm = ({
     // const dbInstance = collection(database, '/MerchantCollection');
     if (data) {
       const title = data.title + "-nft";
-      const dbInstance = doc(database, "/nfts", title + dateTime);
+      const dbInstance = doc(database, "/nfts", title + dateTime2);
       setDoc(dbInstance, data).then(() => {
-        window.location.reload()
+        // window.location.reload()
         console.log("uploaded form data");
       });
 
@@ -130,96 +199,26 @@ const RaffleForm = ({
       }
     }
   };
-  const imageSrc = `https://firebasestorage.googleapis.com/v0/b/treehoppers-mynt.appspot.com/o/${
-    eventName + dateTime
-  }?alt=media&token=07ddd564-df85-49a5-836a-c63f0a4045d6`;
+
   return (
     <form className="bg-gray-100 p-4 rounded-lg shadow-md">
-      <img
-        className="rounded-t-lg h-48 w-full object-cover object-center"
-        src={imageSrc}
-        alt="event image"
-      />
       <div className="my-4">
-        <h1 className="text-2xl font-bold text-center">{eventName}</h1>
+        <h1 className="text-2xl font-bold text-center">{eventName2}</h1>
       </div>
       <div className="mb-4">
         <label
           className="block text-gray-700 font-medium mb-2"
-          htmlFor="event-name"
+          htmlFor="symbol"
         >
-          Description
+          Symbol
         </label>
         <input
           className="border border-gray-400 p-2 w-full rounded-md"
           id="description"
           type="text"
-          placeholder="Enter the event description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-      </div>
-      <div className="mb-4">
-        <label
-          className="block text-gray-700 font-medium mb-2"
-          htmlFor="event-name"
-        >
-          Price
-        </label>
-        <input
-          className="border border-gray-400 p-2 w-full rounded-md"
-          id="price"
-          type="text"
-          placeholder="Enter the registration price"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-        />
-      </div>
-      <div className="mb-4">
-        <label
-          className="block text-gray-700 font-medium mb-2"
-          htmlFor="date-time"
-        >
-          Date/Time
-        </label>
-        <input
-          className="border border-gray-400 p-2 w-full rounded-md"
-          id="date-time"
-          type="datetime-local"
-          value={dateTime}
-          onChange={(e) => {
-            setDateTime(e.target.value);
-            console.log(e.target.value);
-          }}
-        />
-      </div>
-      <div className="mb-4">
-        <label className="block text-gray-700 font-medium mb-2" htmlFor="venue">
-          Venue (Location)
-        </label>
-        <input
-          className="border border-gray-400 p-2 w-full rounded-md"
-          id="venue"
-          type="text"
-          placeholder="Enter the venue"
-          value={venue}
-          onChange={(e) => setVenue(e.target.value)}
-        />
-      </div>
-      <div className="mb-4">
-        <label
-          className="block text-gray-700 font-medium mb-2"
-          htmlFor="capacity"
-        >
-          Capacity
-        </label>
-        <input
-          className="border border-gray-400 p-2 w-full rounded-md"
-          id="capacity"
-          type="number"
-          placeholder="Enter the capacity"
-          value={capacity}
-          onChange={(e) => setCapacity(e.target.value)}
+          placeholder="Enter the NFT Symbol"
+          value={symbol}
+          onChange={(e) => setSymbol(e.target.value)}
         />
       </div>
       <div className="mb-4">

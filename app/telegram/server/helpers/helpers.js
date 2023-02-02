@@ -51,6 +51,16 @@ const CUSTOM_DEVNET_RPC = process.env.CUSTOM_DEVNET_RPC;
 
 // Firebase Methods
 module.exports = {
+  getEventRegistrationsFirebase : async (eventTitle) => {
+    const querySnapshot = await getDocs(collection(db, "registrations"));
+    const registrationInfos = [];
+    querySnapshot.forEach((doc) => {
+    if (doc.data().eventTitle === eventTitle) {
+        registrationInfos.push(doc.data());
+    }
+    });
+    return registrationInfos;
+},
   getEventsFirebase: async () => {
     const querySnapshot = await getDocs(collection(db, "events"));
     const eventInfos = [];
@@ -83,15 +93,17 @@ module.exports = {
     await setDoc(doc(db, "users", userInfo.user_id.toString()), docData);
   },
 
-  insertRegistrationFirebase: async (registrationInfo) => {
+  insertRegistrationFirebase : async (registrationInfo) => {
     docData = {
-      // Inserting as a string bc user_id in user collection is string as well
-      userId: registrationInfo.user_id.toString(),
-      eventTitle: registrationInfo.event_title,
-      status: "pending",
-    };
-    await addDoc(collection(db, "registrations"), docData);
-  },
+    // Inserting as a string bc user_id in user collection is string as well
+    userId: registrationInfo.user_id.toString(), 
+    eventTitle: registrationInfo.event_title,
+    status: registrationInfo.status,
+    }
+    // Doc ID needs to be a string
+    const docId = docData.userId+docData.eventTitle
+    await setDoc(doc(db, "registrations",docId.toString()), docData);
+},
 
   getRegistrationsFirebase: async (userId) => {
     const registrationRef = collection(db, "registrations");
