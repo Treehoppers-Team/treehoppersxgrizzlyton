@@ -188,7 +188,7 @@ const RaffleForm = ({
       const title = data.title + "-nft";
       const dbInstance = doc(database, "/nfts", title + dateTime2);
       setDoc(dbInstance, data).then(() => {
-        // window.location.reload()
+        window.location.reload()
         console.log("uploaded form data");
       });
 

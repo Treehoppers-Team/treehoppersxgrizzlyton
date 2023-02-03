@@ -235,8 +235,7 @@ export default function Card({
                 <div className="flex flex-wrap justify-center m-2">
                 <App callback={callback} />
                 </div>
-                
-                <RaffleForm
+                {address.length > 0 ?                 <RaffleForm
                   eventName2={title}
                   description2={description}
                   price2={price}
@@ -245,7 +244,8 @@ export default function Card({
                   capacity2={capacity}
                   users={users}
                   address={address}
-                />
+                /> : <h1>Connect your Wallet to Conduct the Raffle!</h1>}
+
               </ModalBody>
 
               <ModalFooter>
