@@ -27,10 +27,12 @@ REGISTER, NEW_USER, PROCEED_PAYMENT = range(3)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
+        "/viewWalletBalance - View the current Balance of your Mynt wallet\n"
+        "/viewTransactionHistory - View all transactions for your Mynt wallet\n"
+        "/topUpWallet - Top up your Mynt wallet\n\n"
         "/viewEvents - View all ongoing events\n"
         "/register - Register for an ongoing event \n"
         "/checkRegistration - View registration status (pending/successful/unsuccessful) for an event \n"
-        "/makePayment - Pay for the ticket for an event that you have successfully registered for \n"
         "/redeem - Redeem your ticket at the event venue"
     )
 
