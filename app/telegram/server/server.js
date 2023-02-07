@@ -2,19 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 require("dotenv").config({ path: "../../../.env" });
 
-const {
-  getEventsFirebase,
-  getEventRegistrationsFirebase,
-  getUserFirebase, 
-  insertUserFirebase,
-  insertRegistrationFirebase,
-  getRegistrationsFirebase,
-  getSuccessfulRegistrationsFirebase,
-  insertPaymentFirebase,
-  getUserWalletFirebase,
-  getNftInfoFirebase,
-  mintNft,
-} = require("./helpers/helpers");
+const { getWalletBalanceFirebase, getTransactionHistoryFirebase } = require("./helpers/helpers");
 
 // Setup Express.js server
 const port = 3000;
@@ -37,142 +25,26 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/viewEvents", (req, res) => {
+app.get("/viewWalletBalance/:user_id", (req, res) => {
   try {
-    getEventsFirebase().then((result) => res.send(result));
+    const userId = req.params.user_id;
+    getWalletBalanceFirebase(userId).then((result) => res.send(result));
   } catch (err) {
     console.log(err);
   }
 });
 
-app.get("/getEventRegistrations/:event_title", (req, res) => {
-  const event_title = req.params.event_title;
+app.get("/viewTransactionHistory/:user_id", (req, res) => {
   try {
-    getEventRegistrationsFirebase(event_title).then((result) => res.send(result));
-  } catch (err) {
-    console.log(err);
-  }
-});
-
-app.get("/getUserInfo/:user_id", (req, res) => {
-  const user_id = req.params.user_id;
-  try {
-    getUserFirebase(user_id).then((result) => res.send(result));
-  } catch (err) {
-    console.log(err);
-  }
-});
-
-app.post("/uploadUserInfo", (req, res) => {
-  // Extract user data from the request body
-  const { user_id, user_handle, user_name, user_contact } =
-    req.body;
-  const userInfo = {
-    user_id,
-    user_handle,
-    user_name,
-    user_contact,
-  };
-  try {
-    insertUserFirebase(userInfo)
-      .then(() => res.status(200).json({ message: "User data successfully saved" }))
-  } catch (err) {
-    console.log(err);
-  }
-});
-
-app.post("/insertRegistration", (req, res) => {
-  const { user_id, event_title, status } = req.body
-  const registrationInfo = { user_id, event_title, status}
-  try {
-    insertRegistrationFirebase(registrationInfo).then(() => {
-      res.status(200).json({ message: "User successfully registered for event" })
-    })
-  } catch (err) {
-    console.log("/insertRegistration error", err)
-  }
-});
-
-app.get("/getRegistrations/:user_id", (req, res) => {
-  const user_id = req.params.user_id;
-  try {
-    getRegistrationsFirebase(user_id).then((result) => res.send(result));
-  } catch (err) {
-    console.log(err);
-  }
-});
-
-app.get("/getSuccessfulRegistrations/:user_id", (req, res) => {
-  const user_id = req.params.user_id;
-  try {
-    getSuccessfulRegistrationsFirebase(user_id).then((result) => {
-      res.send(result);
+    const userId = req.params.user_id;
+    getTransactionHistoryFirebase(userId).then((result) => {
+      console.log(result)
+      res.send(result)
     });
   } catch (err) {
-    console.log("/getSuccessfulRegistrations", err);
+    console.log(err);
   }
 });
-
-app.post("/insertPayment", (req, res) => {
-  const { user_id, event_title } = req.body
-  const paymentInfo = { user_id, event_title }
-  try {
-    insertPaymentFirebase(paymentInfo).then(() => {
-      res.status(200).json({ message: "User successfully paid for the event" })
-    })
-  } catch (err) {
-    console.log("/insertPayment error", err)
-  }
-})
-
-app.post("/mintNft", (req, res) => {
-  const { user_id, event_title } = req.body
-  try {
-    handleMint(user_id, event_title).then(result => {
-      console.log("/mintNft ")
-      res.status(200).json(result)
-    })
-  } catch (err) {
-    console.log("/mintNft error ", err)
-  }
-})
-
-app.post('/uploadMetadata', (req, res) => {
-  // Construct URI, using IPFS browser gateway
-  // image_URI = req.body["image_URI"]
-  // title = req.body["title"]
-  // symbol = req.body["symbol"]
-  const options = {
-    pinataMetadata: {
-      name: "test"
-    },
-    pinataOptions: {
-      cidVersion: 0
-    }
-  };
-  const metadata = req.body
-  pinata.pinJSONToIPFS(metadata, options)
-  .then((result) =>  {
-    console.log(result["IpfsHash"])
-    res.send(result["IpfsHash"])
-  })
-  .catch((err) => console.log(err));
-})
-
-const handleMint = async(userId, eventTitle) => {
-  const walletKeys = await getUserWalletFirebase(userId)
-  const userKeypair = Keypair.fromSecretKey(walletKeys.privateKey)
-  console.log("User Keypair: ", userKeypair)
-
-  const nftInfo = await getNftInfoFirebase(eventTitle)
-  console.log("Nft Info: ", nftInfo)
-
-  const { merchantKey, title, symbol, uri } = nftInfo[0]
-  const creatorKey = new PublicKey(merchantKey)
-
-  const mintTransaction = await mintNft(userKeypair, creatorKey, title, symbol, uri)
-  return mintTransaction
-}
 
 // Start the Express.js web server
 app.listen(port, () => console.log(`Express.js API listening on port ${port}`));
