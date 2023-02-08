@@ -1,5 +1,6 @@
 import logging
 import json
+import pyqrcode
 import requests
 from telegram import (
     Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, LabeledPrice,
@@ -11,6 +12,7 @@ from telegram.ext import (
 )
 import os
 from dotenv import load_dotenv
+from sys import platform
 
 load_dotenv()
 
@@ -36,7 +38,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/viewEvents - View all ongoing events\n"
         "/register - Register for an ongoing event \n"
         "/checkRegistration - View registration status (pending/successful/unsuccessful) for an event \n"
-        "/redeem - Redeem your ticket at the event venue"
+        "/redeem - Redeem your ticket at the event venue\n"
+        "/showQR - show your QR code"
     )
 
 
@@ -65,7 +68,6 @@ async def view_wallet_balance(update: Update, context: ContextTypes.DEFAULT_TYPE
     await update.message.reply_text(f'Your wallet balance is ${user_balance}')
     return ConversationHandler.END
 
-
 async def view_transaction_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     response = requests.get(endpoint_url + f"/viewTransactionHistory/{user_id}")
@@ -88,6 +90,37 @@ async def view_transaction_history(update: Update, context: ContextTypes.DEFAULT
     await update.message.reply_text(text, parse_mode='Markdown')
     return ConversationHandler.END
 
+""""
+=============================================================================================
+view_wallet: Display in-app wallet (should eventually be integrated with viewwalletBalance, viewTransactionHistory and TopUp Wallet ), needs to be web app (either created in react etc)
+=============================================================================================
+"""
+
+async def view_wallet(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    return ConversationHandler.END
+
+
+""""
+=============================================================================================
+show_QR: Generate a QR Code (should be integrated with redeem)
+=============================================================================================
+"""
+
+async def show_QR(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    username = update.message.from_user.username
+    await update.message.reply_text(f'Your wallet belongs to {username}')
+    url = pyqrcode.create(f'https://t.me/{username}')
+    url.png(f'./qr_codes/{username}.png', scale=6)
+    await update.message.reply_photo(f'./qr_codes/{username}.png')
+    # add code to delete photo as well
+    current_path = os.getcwd()
+    if platform != 'darwin': #windows
+      picture_path = current_path + f'\qr_codes\{username}.png'
+    else: #mac or linux
+      picture_path = current_path + f'/qr_codes/{username}.png'
+    # print(f'Your current path is {picture_path}')
+    os.remove(picture_path)
+    return ConversationHandler.END
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(TELE_TOKEN_TEST).build()
@@ -97,7 +130,8 @@ if __name__ == '__main__':
             CommandHandler('start', start),
             CommandHandler('cancel', cancel),
             CommandHandler('viewWalletBalance', view_wallet_balance),
-            CommandHandler('viewTransactionHistory', view_transaction_history)
+            CommandHandler('viewTransactionHistory', view_transaction_history),
+            CommandHandler('showQR', show_QR)
         ],
         states={
         },
