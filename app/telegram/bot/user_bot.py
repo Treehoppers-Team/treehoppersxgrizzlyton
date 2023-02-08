@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 # Global Variables
 endpoint_url = "http://localhost:3000"
 
-NEW_USER, PROCEED_PAYMENT = range(2)
+NEW_USER, PROCEED_PAYMENT, TITLE = range(3)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -252,6 +252,71 @@ async def successful_payment(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await update.message.reply_text(f"You have successfully topped up ${topup_amount}!")
     return ConversationHandler.END
 
+""""
+=============================================================================================
+view_events: View ongoing events
+register_for_event: Prompt user for event title
+check_event_title: Validate event title provided
+check_existing_user: Prompt new users for contact info & check if
+                    existing users have already registered for the event
+register_new_user: Save records of new Users in user DB
+complete_registration: Send API request with registration details
+=============================================================================================
+"""
+
+async def view_events(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info("Retrieving Events Information")
+    response = requests.get(endpoint_url + "/viewEvents")
+    response_data = response.json()
+    text = ""
+
+    # Format Response data
+    for event in response_data:
+        event_title = event['title']
+        event_description = event['description']
+        event_time = event['time']
+        event_venue = event['venue']
+        event_price = event['price']
+
+        text += f"Event Title: *{event_title}*\n" \
+            f"Description: {event_description}\n" \
+            f"Time: {event_time}\n" \
+            f"Venue: {event_venue}\n" \
+            f"Price: *{event_price}*\n\n"
+    text += "Use /register to register for any events that you are interested in"
+
+    await update.message.reply_text(text, parse_mode='Markdown')
+    return ConversationHandler.END
+
+
+async def register_for_event(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        'Please provide the title of the Event that you would like to register for'
+    )
+    return TITLE
+
+
+async def check_event_title(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Get Event list from the database
+    event_title = update.message.text
+    response = requests.get(endpoint_url + "/viewEvents")
+    response_data = response.json()
+    events = []
+    for event in response_data:
+        events.append(event['title'])
+    logger.info(f"Existing Event titles: {events}")
+
+    if event_title in events:
+        await update.message.reply_text(
+            f'You have provided a valid title'
+        )
+        return ConversationHandler.END
+
+    else:
+        await update.message.reply_text(
+            f'Event {event_title} does not exist, please provide a valid event title'
+        )
+        return TITLE
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(TELE_TOKEN_TEST).build()
@@ -263,11 +328,14 @@ if __name__ == '__main__':
             CommandHandler('viewWalletBalance', view_wallet_balance),
             CommandHandler('viewTransactionHistory', view_transaction_history),
             CommandHandler('topUpWallet', top_up_wallet), 
+            CommandHandler('viewEvents', view_events),
+            CommandHandler('register', register_for_event),
             CommandHandler('showQR', show_QR)
         ],
         states={
             NEW_USER: [MessageHandler(filters.Regex('^([A-Za-z ]+): ([0-9A-Za-z.+-]+)$'), register_new_user)],
-            PROCEED_PAYMENT: [MessageHandler(filters.Regex('^(10|50|100)$'), proceed_payment)]
+            PROCEED_PAYMENT: [MessageHandler(filters.Regex('^(10|50|100)$'), proceed_payment)], 
+            TITLE: [MessageHandler(filters.TEXT, check_event_title)],
         },
         fallbacks=[MessageHandler(filters.TEXT, unknown)]
     )

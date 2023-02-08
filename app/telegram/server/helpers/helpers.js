@@ -136,6 +136,18 @@ module.exports = {
       await updateDoc(docRef, {totalDeposits: updatedDeposits})
       console.log(`Bank Total Deposits updated to be ${updatedDeposits}`)
     }
-  }
+  }, 
+
+  getEventsFirebase: async () => {
+    const querySnapshot = await getDocs(collection(db, "events"));
+    const eventInfos = [];
+    querySnapshot.forEach((doc) => {
+      // const eventTitle = doc.id
+      const eventData = { id: doc.id, ...doc.data() };
+      // eventData.title = eventTitle
+      eventInfos.push(eventData);
+    });
+    return eventInfos;
+  },
 
 };

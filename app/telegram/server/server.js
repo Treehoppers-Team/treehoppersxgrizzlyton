@@ -10,6 +10,7 @@ const {
   updateUserBalanceFirebase,
   insertTransactionFirebase,
   updateBankBalanceFirebase,
+  getEventsFirebase,
 } = require("./helpers/helpers");
 
 // Setup Express.js server
@@ -95,6 +96,14 @@ app.post("/insertPayment", (req, res) => {
       });
   } catch (err) {
     console.log("/insertPayment error", err);
+  }
+});
+
+app.get("/viewEvents", (req, res) => {
+  try {
+    getEventsFirebase().then((result) => res.send(result));
+  } catch (err) {
+    console.log(err);
   }
 });
 
