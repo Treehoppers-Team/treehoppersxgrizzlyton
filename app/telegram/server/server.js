@@ -11,6 +11,8 @@ const {
   insertTransactionFirebase,
   updateBankBalanceFirebase,
   getEventsFirebase,
+  getRegistrationsFirebase,
+  insertRegistrationFirebase,
 } = require("./helpers/helpers");
 
 // Setup Express.js server
@@ -80,7 +82,7 @@ app.post("/uploadUserInfo", (req, res) => {
   }
 });
 
-app.post("/insertPayment", (req, res) => {
+app.post("/topUpWallet", (req, res) => {
   const { user_id, amount, transaction_type, timestamp } = req.body;
   const userBalanceObject = { user_id, amount, transaction_type };
   const newTransaction = { user_id, amount, transaction_type, timestamp };
@@ -95,7 +97,7 @@ app.post("/insertPayment", (req, res) => {
         res.status(200).json({ message: "Payment successfully processed" });
       });
   } catch (err) {
-    console.log("/insertPayment error", err);
+    console.log("/topUpWallet error", err);
   }
 });
 
@@ -104,6 +106,46 @@ app.get("/viewEvents", (req, res) => {
     getEventsFirebase().then((result) => res.send(result));
   } catch (err) {
     console.log(err);
+  }
+});
+
+app.get("/getRegistrations/:user_id", (req, res) => {
+  const user_id = req.params.user_id;
+  try {
+    getRegistrationsFirebase(user_id).then((result) => res.send(result));
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+app.post("/insertRegistration", (req, res) => {
+  const { user_id, event_title, status } = req.body
+  const registrationInfo = { user_id, event_title, status}
+  try {
+    insertRegistrationFirebase(registrationInfo).then(() => {
+      res.status(200).json({ message: "User successfully registered for event" })
+    })
+  } catch (err) {
+    console.log("/insertRegistration error", err)
+  }
+});
+
+app.post("/ticketSale", (req, res) => {
+  const { user_id, amount, transaction_type, timestamp, event_title } = req.body;
+  const userBalanceObject = { user_id, amount, transaction_type };
+  const newTransaction = { user_id, amount, transaction_type, timestamp, event_title };
+  const bankBalanceObject = { amount, transaction_type };
+
+  try {
+    updateUserBalanceFirebase(userBalanceObject)
+      .then(() => insertTransactionFirebase(newTransaction))
+      .then(() => updateBankBalanceFirebase(bankBalanceObject))
+      .then(() => {
+        console.log("Response Sent");
+        res.status(200).json({ message: "Payment successfully processed" });
+      });
+  } catch (err) {
+    console.log("/topUpWallet error", err);
   }
 });
 

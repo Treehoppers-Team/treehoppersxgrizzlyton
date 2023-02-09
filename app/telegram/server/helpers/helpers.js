@@ -55,10 +55,10 @@ module.exports = {
     const docRef = doc(db, "users", userId.toString());
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      const { balance } = docSnap.data()
-      return { balance }
+      const { balance } = docSnap.data();
+      return { balance };
     } else {
-      return { balance : 0 };
+      return { balance: 0 };
     }
   },
 
@@ -76,7 +76,7 @@ module.exports = {
       transactions.push(transactionData);
     });
     return transactions;
-  }, 
+  },
 
   getUserFirebase: async (userId) => {
     const docRef = doc(db, "users", userId.toString());
@@ -93,50 +93,68 @@ module.exports = {
       handle: userInfo.user_handle,
       name: userInfo.user_name,
       contact: userInfo.user_contact,
-      balance: 0
+      balance: 0,
     };
     // Doc ID needs to be a string
     await setDoc(doc(db, "users", userInfo.user_id.toString()), docData);
   },
 
   updateUserBalanceFirebase: async (userBalanceInfo) => {
-    if (userBalanceInfo.transaction_type == "TOP_UP") {
-      const userId = userBalanceInfo.user_id
-      const docRef = doc(db, "users", userId.toString())
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const currentBalance = docSnap.data().balance
-        const newBalance = currentBalance + userBalanceInfo.amount
-        await updateDoc(docRef, {balance: newBalance})
-        console.log(`User ${userId} topped up ${userBalanceInfo.amount} successfully`)
-      } else {
-        return { error : "User does not exist"}
+    const userId = userBalanceInfo.user_id;
+    const docRef = doc(db, "users", userId.toString());
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const currentBalance = docSnap.data().balance;
+      if (userBalanceInfo.transaction_type == "TOP_UP") {
+        const newBalance = currentBalance + userBalanceInfo.amount;
+        await updateDoc(docRef, { balance: newBalance });
+        console.log(
+          `User ${userId} topped up ${userBalanceInfo.amount} successfully`
+        );
       }
+      if (userBalanceInfo.transaction_type == "SALE") {
+        const newBalance = currentBalance - userBalanceInfo.amount;
+        await updateDoc(docRef, { balance: newBalance });
+        console.log(
+          `${userBalanceInfo.amount} deducted from user ${userId} balance`
+        );
+      }
+    } else {
+      return { error: "User does not exist" };
     }
   },
 
   insertTransactionFirebase: async (transactionInfo) => {
     docData = {
-      userId: transactionInfo.user_id.toString(), 
-      transactionType: transactionInfo.transaction_type, 
-      amount: transactionInfo.amount, 
-      timestamp: transactionInfo.timestamp
+      userId: transactionInfo.user_id.toString(),
+      transactionType: transactionInfo.transaction_type,
+      amount: transactionInfo.amount,
+      timestamp: transactionInfo.timestamp,
+    };
+    if ("event_title" in transactionInfo) {
+      docData.eventTitle = transactionInfo.event_title;
     }
-    const docId = docData.userId + " " + docData.timestamp
+    const docId = docData.userId + " " + docData.timestamp;
     await setDoc(doc(db, "transactions", docId), docData);
-    console.log(`Transaction ${docId} inserted successfully`)
+    console.log(`Transaction ${docId} inserted successfully`);
   },
 
   updateBankBalanceFirebase: async (bankBalanceInfo) => {
+    const docRef = doc(db, "bank", "MYNT_BANK");
+    const docSnap = await getDoc(docRef);
     if (bankBalanceInfo.transaction_type == "TOP_UP") {
-      const docRef = doc(db, "bank", "MYNT_BANK")
-      const docSnap = await getDoc(docRef)
-      const currentDeposits = docSnap.data().totalDeposits
-      const updatedDeposits = currentDeposits + bankBalanceInfo.amount
-      await updateDoc(docRef, {totalDeposits: updatedDeposits})
-      console.log(`Bank Total Deposits updated to be ${updatedDeposits}`)
+      const currentDeposits = docSnap.data().totalDeposits;
+      const updatedDeposits = currentDeposits + bankBalanceInfo.amount;
+      await updateDoc(docRef, { totalDeposits: updatedDeposits });
+      console.log(`Bank Total Deposits updated to be ${updatedDeposits}`);
     }
-  }, 
+    if (bankBalanceInfo.transaction_type == 'SALE') {
+      const currentSales = docSnap.data().totalSales;
+      const updatedSales= currentSales + bankBalanceInfo.amount;
+      await updateDoc(docRef, { totalSales: updatedSales });
+      console.log(`Bank Total Sales updated to be ${updatedSales}`);
+    }
+  },
 
   getEventsFirebase: async () => {
     const querySnapshot = await getDocs(collection(db, "events"));
@@ -150,4 +168,31 @@ module.exports = {
     return eventInfos;
   },
 
+  getRegistrationsFirebase: async (userId) => {
+    const registrationRef = collection(db, "registrations");
+    // UserId needs to be converted from number to string prior to the check
+    const filter = query(
+      registrationRef,
+      where("userId", "==", userId.toString())
+    );
+    const querySnapshot = await getDocs(filter);
+    const registrationInfos = [];
+    querySnapshot.forEach((doc) => {
+      const registrationData = doc.data();
+      registrationInfos.push(registrationData);
+    });
+    return registrationInfos;
+  },
+
+  insertRegistrationFirebase: async (registrationInfo) => {
+    docData = {
+      // Inserting as a string bc user_id in user collection is string as well
+      userId: registrationInfo.user_id.toString(),
+      eventTitle: registrationInfo.event_title,
+      status: registrationInfo.status,
+    };
+    // Doc ID needs to be a string
+    const docId = docData.userId + docData.eventTitle;
+    await setDoc(doc(db, "registrations", docId.toString()), docData);
+  },
 };
