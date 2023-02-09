@@ -263,7 +263,7 @@ view_events: View ongoing events
 check_registration: View status for users' registrations
 register_for_event: Prompt user for event title
 get_previous_registrations: API call to retrive previous registrations
-pre_registration_validation: Validate event title and check previous registrations
+validate_registration: Validate event title and check previous registrations
 verify_balance: Check whether user has sufficient balance in in-app wallet
 complete_purchase: Send API request to save payment records
 complete_registration: Send API request to save registration records
@@ -352,7 +352,7 @@ async def get_previous_registrations(update: Update, event_title):
         return ConversationHandler.END
 
 
-async def pre_registration_validation(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def validate_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
     event_title = update.message.text
     context.user_data["event_title"] = event_title
     response = requests.get(endpoint_url + "/viewEvents")
@@ -483,7 +483,7 @@ if __name__ == '__main__':
         states={
             NEW_USER: [MessageHandler(filters.Regex('^([A-Za-z ]+): ([0-9A-Za-z.+-]+)$'), register_new_user)],
             PROCEED_PAYMENT: [MessageHandler(filters.Regex('^(10|50|100)$'), proceed_payment)],
-            TITLE: [MessageHandler(filters.TEXT, pre_registration_validation)],
+            TITLE: [MessageHandler(filters.TEXT, validate_registration)],
             VERIFY_BALANCE: [MessageHandler(filters.Regex('^(Yes|No)$'), verify_balance)]
         },
         fallbacks=[MessageHandler(filters.TEXT, unknown)]
