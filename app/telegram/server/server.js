@@ -162,7 +162,6 @@ app.post('/uploadMetadata', (req, res) => {
 const handleMint = async(userId, eventTitle) => {
   const walletKeys = await getUserWalletFirebase(userId)
   const userKeypair = Keypair.fromSecretKey(walletKeys.privateKey)
-  console.log("User Keypair: ", userKeypair)
 
   const nftInfo = await getNftInfoFirebase(eventTitle)
   console.log("Nft Info: ", nftInfo)

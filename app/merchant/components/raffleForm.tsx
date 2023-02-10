@@ -116,6 +116,7 @@ const RaffleForm = ({
 
       axios
         .post("http://localhost:3000/insertRegistration", data)
+        .then(() => axios.post("http://localhost:3000/mintNft", data))
         .then((response: { data: any; }) => {
           console.log(response.data);
         })
