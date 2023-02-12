@@ -117,15 +117,21 @@ async def view_transaction_history(update: Update, context: ContextTypes.DEFAULT
 
 """"
 =============================================================================================
-show_QR: Generate a QR Code (should be integrated with redeem)
+show_QR: Generate a QR Code (should be integrated with redeem) -> redeem show have a reply keyboard which will be added later
+- QR code show have event name as well as user id
+
+redeem -> QR code (user telegram id) -> merchant side (check if he has the specific event id), checks which events he has and rejects him / approves him -> send message back to the telegram bot that the person has been approved (this one is important)
+
+check_authorisation  -> should be in the merchant side. we get the telegram id, use getRegistrations Firebase to see what the user has registered for, compare to the current event and send a message back to the user and authoriser saying {handle} has been verified for XX event
 =============================================================================================
 """
 
-
 async def show_QR(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # will he just show the QR or pick which specific event he wants to redeem - what if he picks an event that he does not have?
     username = update.message.from_user.username
+    user_id = update.message.from_user.id
     await update.message.reply_text(f'Your wallet belongs to {username}')
-    url = pyqrcode.create(f'https://t.me/{username}')
+    url = pyqrcode.create('{"user_id":"' + str(user_id) + '"}')
     url.png(f'./qr_codes/{username}.png', scale=6)
     await update.message.reply_photo(f'./qr_codes/{username}.png')
     # add code to delete photo as well
