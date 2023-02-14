@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 # Global Variables
 endpoint_url = "http://localhost:3000"
 
-NEW_USER, PROCEED_PAYMENT, TITLE, VERIFY_BALANCE = range(4)
+NEW_USER, PROCEED_PAYMENT, TITLE, VERIFY_BALANCE, REDEEM = range(5)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -43,7 +43,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/register - Register for an ongoing event \n"
         "/checkRegistration - View registration status (pending/successful/unsuccessful) for an event \n"
         "/redeem - Redeem your ticket at the event venue\n"
-        "/showQR - show your QR code"
     )
 
 
@@ -117,29 +116,82 @@ async def view_transaction_history(update: Update, context: ContextTypes.DEFAULT
 
 """"
 =============================================================================================
-show_QR: Generate a QR Code (should be integrated with redeem) -> redeem show have a reply keyboard which will be added later
-- QR code show have event name as well as user id
-
-redeem -> QR code (user telegram id) -> merchant side (check if he has the specific event id), checks which events he has and rejects him / approves him -> send message back to the telegram bot that the person has been approved (this one is important)
-
-check_authorisation  -> should be in the merchant side. we get the telegram id, use getRegistrations Firebase to see what the user has registered for, compare to the current event and send a message back to the user and authoriser saying {handle} has been verified for XX event
+redeem: Displays events that the user has successfully registered for and are yet to be redeemed. After user picks an event, show_QR will be called that will display a QR code containing information on the user's id, event status and event title
+check_authorisation (merchant): should be in the merchant side. we get the telegram id, use getRegistrations Firebase to see what the user has registered for, compare to the current event and send a message back to the user and authoriser saying {handle} has been verified for XX event
 =============================================================================================
 """
+async def redeem(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+    logger.info(f"Retrieving registrations for User: {user_id}")
+    response = requests.get(
+        endpoint_url + f"/getRegistrations/{user_id}")
+    response_data = response.json()
+
+    # Format Response data
+    if len(response_data) <= 0:
+        text = "You have no registered events"
+        await update.message.reply_text(text, parse_mode='Markdown')
+        return ConversationHandler.END
+
+    else:
+        registered_events ={} 
+        reply_string = ''
+        count = 1
+
+        for events in response_data:
+            eventTitle = events['eventTitle']
+            status = events['status']
+            user_id = events['userId']
+            if "success" in status: # if status == 'success' did not work strange
+                registered_events[eventTitle] = {'userId':user_id,'status':status,'eventTitle':eventTitle}
+                reply_string += f'\n {count}. {eventTitle}'
+                count += 1
+
+        if len(registered_events) == 0: # if raffle was not successful - he did not get the ticket
+            text = "You have no registered events"
+            await update.message.reply_text(text, parse_mode='Markdown')
+            return ConversationHandler.END
+        
+        reply_string += '\n\n Which one would you like to redeem?'
+
+        reply_keyboard = [list(registered_events.keys())]
+        print('--------------------')
+        print(reply_keyboard)
+        print('--------------------')
+        context.user_data['registered_events'] = registered_events #very important to keey the information
+        print('--------------------')
+        print(context.user_data['registered_events'])
+        print('--------------------')
+
+        await update.message.reply_text(
+            "You have available tickets! You currently have: \n"
+            f'{reply_string}',
+            reply_markup=ReplyKeyboardMarkup(
+                reply_keyboard, one_time_keyboard=True, input_field_placeholder="ShengSiong/Grab?"
+            ),)
+        return REDEEM
 
 async def show_QR(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # will he just show the QR or pick which specific event he wants to redeem - what if he picks an event that he does not have?
+    ticket = update.message.text
     username = update.message.from_user.username
     user_id = update.message.from_user.id
-    await update.message.reply_text(f'Your wallet belongs to {username}')
-    url = pyqrcode.create('{"user_id":"' + str(user_id) + '"}')
-    url.png(f'./qr_codes/{username}.png', scale=6)
-    await update.message.reply_photo(f'./qr_codes/{username}.png')
+    registered_events = context.user_data['registered_events']
+    qr_information = registered_events[ticket]
+    qr_information_str = json.dumps(qr_information)
+    print('--------------------')
+    print(qr_information)
+    print('--------------------')
+
+    await update.message.reply_text(f'Show this QR code to redeem your ticket for {ticket}. This QR code belongs to {username}')
+    url = pyqrcode.create(qr_information_str)
+    url.png(f'./qr_codes/{user_id}.png', scale=6)
+    await update.message.reply_photo(f'./qr_codes/{user_id}.png')
     # add code to delete photo as well
     current_path = os.getcwd()
     if platform != 'darwin':  # windows
-        picture_path = current_path + f'\qr_codes\{username}.png'
+        picture_path = current_path + f'\qr_codes\{user_id}.png'
     else:  # mac or linux
-        picture_path = current_path + f'/qr_codes/{username}.png'
+        picture_path = current_path + f'/qr_codes/{user_id}.png'
     # print(f'Your current path is {picture_path}')
     os.remove(picture_path)
     return ConversationHandler.END
@@ -484,13 +536,15 @@ if __name__ == '__main__':
             CommandHandler('viewEvents', view_events),
             CommandHandler('checkRegistration', check_registration),
             CommandHandler('register', register_for_event),
-            CommandHandler('showQR', show_QR)
+            CommandHandler('showQR', show_QR),
+            CommandHandler('redeem',redeem)
         ],
         states={
             NEW_USER: [MessageHandler(filters.Regex('^([A-Za-z ]+): ([0-9A-Za-z.+-]+)$'), register_new_user)],
             PROCEED_PAYMENT: [MessageHandler(filters.Regex('^(10|50|100)$'), proceed_payment)],
             TITLE: [MessageHandler(filters.TEXT, validate_registration)],
-            VERIFY_BALANCE: [MessageHandler(filters.Regex('^(Yes|No)$'), verify_balance)]
+            VERIFY_BALANCE: [MessageHandler(filters.Regex('^(Yes|No)$'), verify_balance)],
+            REDEEM: [MessageHandler(filters.TEXT, show_QR)]
         },
         fallbacks=[MessageHandler(filters.TEXT, unknown)]
     )
