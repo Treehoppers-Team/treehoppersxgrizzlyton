@@ -14,8 +14,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-TELE_TOKEN_TEST = os.getenv("TELE_TOKEN_TEST")
-PROVIDER_TOKEN = os.getenv("PROVIDER_TOKEN")
+TELE_TOKEN_TEST = "5756526738:AAFw_S43pkP1rQV1vw0WVsNil_xrV25aWAc"
+PROVIDER_TOKEN = "284685063:TEST:YTFkN2IzNmI1MWUz"
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -195,7 +195,7 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
     data = {
         'user_id': user_id,
         'event_title': event_title,
-        'status': 'pending'
+        'status': 'PENDING'
     }
 
     endpoint_url = "http://localhost:3000"

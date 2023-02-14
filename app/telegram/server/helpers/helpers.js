@@ -105,6 +105,23 @@ module.exports = {
     await setDoc(doc(db, "registrations", docId.toString()), docData);
   },
 
+  updateRegistrationFirebase: async (registrationInfo) => {
+    docData = {
+      userId: registrationInfo.user_id.toString(),
+      eventTitle: registrationInfo.event_title,
+      status: registrationInfo.status,
+    };
+    
+    const docId = docData.userId + docData.eventTitle;
+    const docRef = doc(db, "registrations", docId.toString());
+
+    // updating the status of the registration after raffle
+    await updateDoc(docRef,{
+      status: docData.status
+    })
+    // await setDoc(doc(db, "registrations", docId.toString()), docData);
+  },
+
   getRegistrationsFirebase: async (userId) => {
     const registrationRef = collection(db, "registrations");
     // UserId needs to be converted from number to string prior to the check

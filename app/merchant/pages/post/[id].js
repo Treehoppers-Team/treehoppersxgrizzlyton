@@ -90,7 +90,7 @@ const Content = () => {
                     name={user.name}
                     contact={user.contact}
                     handle={user.handle}
-                    pending={user.status === "pending" ? true : false}
+                    pending={user.status.toLowerCase() === "pending" || user.status.toLowerCase() === "unsuccessful" ? true : false}
                   />
                 </div>
               );

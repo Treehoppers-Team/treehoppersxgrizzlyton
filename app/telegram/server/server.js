@@ -8,6 +8,7 @@ const {
   getUserFirebase, 
   insertUserFirebase,
   insertRegistrationFirebase,
+  updateRegistrationFirebase,
   getRegistrationsFirebase,
   getSuccessfulRegistrationsFirebase,
   insertPaymentFirebase,
@@ -90,6 +91,18 @@ app.post("/insertRegistration", (req, res) => {
     })
   } catch (err) {
     console.log("/insertRegistration error", err)
+  }
+});
+
+app.post("/updateRegistration", (req, res) => {
+  const { user_id, event_title, status } = req.body
+  const registrationInfo = { user_id, event_title, status}
+  try {
+    updateRegistrationFirebase(registrationInfo).then(() => {
+      res.status(200).json({ message: `${registrationInfo.user_id} status successfully updated to ${registrationInfo.status}` })
+    })
+  } catch (err) {
+    console.log("/updatetRegistration error", err)
   }
 });
 

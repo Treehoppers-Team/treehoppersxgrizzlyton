@@ -104,18 +104,38 @@ const RaffleForm = ({
   async function conductRaffle() {
     const amount = parseInt(capacity2);
     const winners = raffleSelect(users, amount);
-    // find users in registration db and set status to success
-    // make post request to /insertRegistration and in request body pass in userid and event title
-    console.log(winners)
+    const losers = users.filter(x => !winners.includes(x));
+    
+    console.log("winners",winners)
+    console.log("losers",losers)
+
+    for (let i = 0; i < losers.length; i++) {
+      
+      const data = {
+        user_id: (losers[i] as any).id,
+        event_title: eventName2,
+        status: "UNSUCCESSFUL",
+      };
+
+      axios
+        .post("http://localhost:3000/updateRegistration", data)
+        .then((response: { data: any; }) => {
+          console.log(response.data);
+        })
+        .catch((error: any) => {
+          console.log(error);
+        });
+    }
+
     for (let i = 0; i < winners.length; i++) {
       const data = {
         user_id: winners[i].id,
         event_title: eventName2,
-        status: "success",
+        status: "SUCCESSFUL",
       };
 
       axios
-        .post("http://localhost:3000/insertRegistration", data)
+        .post("http://localhost:3000/updateRegistration", data)
         .then(() => axios.post("http://localhost:3000/mintNft", data))
         .then((response: { data: any; }) => {
           console.log(response.data);
@@ -169,9 +189,6 @@ const RaffleForm = ({
 
       })
 }
-  
-
-  const storageRef = ref(storage, eventName2 + "-nft" + dateTime2);
 
   const uploadData = (
     data:
@@ -193,11 +210,6 @@ const RaffleForm = ({
         console.log("uploaded form data");
       });
 
-      if (image) {
-        uploadBytes(storageRef, image!).then((snapshot) => {
-          console.log("Uploaded a blob or file!");
-        });
-      }
     }
   };
 
