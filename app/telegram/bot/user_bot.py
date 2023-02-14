@@ -175,7 +175,9 @@ async def show_QR(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ticket = update.message.text
     username = update.message.from_user.username
     user_id = update.message.from_user.id
+    user_chat_id = update.effective_chat.id
     registered_events = context.user_data['registered_events']
+    registered_events[ticket]['chatId'] = user_chat_id
     qr_information = registered_events[ticket]
     qr_information_str = json.dumps(qr_information)
     print('--------------------')

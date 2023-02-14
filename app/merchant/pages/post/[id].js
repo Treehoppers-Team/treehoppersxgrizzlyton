@@ -10,7 +10,7 @@ const Content = () => {
   const [event, setEvent] = useState({});
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [result, setResult] = useState({name:"",userId:"",eventTitle:"",status:""});
+  const [result, setResult] = useState({name:"",userId:"",eventTitle:"",status:"",chat_id:""});
   const [scan, setScan] = useState(false);
   const attendees = users.filter((user) => {
     return user.status.toLowerCase() === "successful";
@@ -27,6 +27,7 @@ const Content = () => {
   const handleScan = (data) => {
     console.log("scanning")
     if (data) {
+      console.log(data)
       const parsedData = JSON.parse(data.text);
 
 
@@ -36,23 +37,30 @@ const Content = () => {
         return user.id === parsedData.userId;
       })
 
-      if (parsedData.eventTitle !== event.title) {
-        alert("QR code is not for this event!");
-        return;
-      }
-      else if (!user) {
-        alert("User is not registered for this event!");
-        return;
-      } else {
+      if (parsedData.eventTitle === event.title && user) {
+        alert("Verified!")
+        const chat_id = parsedData.chatId;
+        console.log(chat_id)
+        const telegramPush = `https://api.telegram.org/bot5756526738:AAFw_S43pkP1rQV1vw0WVsNil_xrV25aWAc/sendMessage?chat_id=${chat_id}&text=Verified`
+        
+        fetch(telegramPush).then((res) => {
+          console.log(res)
+        })
+
         getUserInfo(parsedData.userId).then((res) => {
           setResult({
             name: res.name,
             userId: parsedData.userId,
             eventTitle: parsedData.eventTitle,
             status: parsedData.status,
+            chat_id: parsedData.chatId
           });
         })
       }
+      else {
+        alert("User is not registered for this event!");
+        return;
+      } 
 
 
     }
