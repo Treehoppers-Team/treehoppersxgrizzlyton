@@ -14,12 +14,12 @@ const EventForm = () => {
 
   function handleClick() {
     console.log(eventName, dateTime, venue, capacity, image);
-    uploadData({ title: eventName, description: description, price: price, time: dateTime, venue: venue, capacity: capacity},image!)
+    uploadData({ title: eventName, description: description, price: Number(price), time: dateTime, venue: venue, capacity: capacity},image!)
   }
 
   const storageRef = ref(storage, eventName + dateTime);
 
-  const uploadData = (data: { title: string; description: string; price: string; time: string; venue: string; capacity: string;} | undefined, image: File) => {
+  const uploadData = (data: { title: string; description: string; price: number; time: string; venue: string; capacity: string;} | undefined, image: File) => {
     // const dbInstance = collection(database, '/MerchantCollection');
     if (data) {
       const dbInstance = doc(database, "/events", data.title + data.time);

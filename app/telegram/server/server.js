@@ -10,7 +10,9 @@ const {
   updateUserBalanceFirebase,
   insertTransactionFirebase,
   updateBankBalanceFirebase,
+  updateRegistrationFirebase,
   getEventsFirebase,
+  getEventRegistrationsFirebase,
   getRegistrationsFirebase,
   insertRegistrationFirebase,
 } = require("./helpers/helpers");
@@ -109,6 +111,27 @@ app.get("/viewEvents", (req, res) => {
   }
 });
 
+app.get("/getEventRegistrations/:event_title", (req, res) => {
+  const event_title = req.params.event_title;
+  try {
+    getEventRegistrationsFirebase(event_title).then((result) => res.send(result));
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+app.post("/updateRegistration", (req, res) => {
+  const { user_id, event_title, status } = req.body
+  const registrationInfo = { user_id, event_title, status}
+  try {
+    updateRegistrationFirebase(registrationInfo).then(() => {
+      res.status(200).json({ message: `${registrationInfo.user_id} status successfully updated to ${registrationInfo.status}` })
+    })
+  } catch (err) {
+    console.log("/updatetRegistration error", err)
+  }
+});
+
 app.get("/getRegistrations/:user_id", (req, res) => {
   const user_id = req.params.user_id;
   try {
@@ -145,9 +168,50 @@ app.post("/ticketSale", (req, res) => {
         res.status(200).json({ message: "Payment successfully processed" });
       });
   } catch (err) {
-    console.log("/topUpWallet error", err);
+    console.log("/ticketSale error", err);
   }
 });
+
+app.post("/raffleRefund", (req, res) => {
+  const { user_id, amount, transaction_type, timestamp, event_title } = req.body;
+  const userBalanceObject = { user_id, amount, transaction_type };
+  const newTransaction = { user_id, amount, transaction_type, timestamp, event_title };
+  const bankBalanceObject = { amount, transaction_type };
+
+  try {
+    updateUserBalanceFirebase(userBalanceObject)
+      .then(() => insertTransactionFirebase(newTransaction))
+      .then(() => updateBankBalanceFirebase(bankBalanceObject))
+      .then(() => {
+        console.log("Response Sent");
+        res.status(200).json({ message: "Payment successfully processed" });
+      });
+  } catch (err) {
+    console.log("/raffleRefund error", err);
+  }
+});
+
+app.post('/uploadMetadata', (req, res) => {
+  // Construct URI, using IPFS browser gateway
+  // image_URI = req.body["image_URI"]
+  // title = req.body["title"]
+  // symbol = req.body["symbol"]
+  const options = {
+    pinataMetadata: {
+      name: "test"
+    },
+    pinataOptions: {
+      cidVersion: 0
+    }
+  };
+  const metadata = req.body
+  pinata.pinJSONToIPFS(metadata, options)
+  .then((result) =>  {
+    console.log(result["IpfsHash"])
+    res.send(result["IpfsHash"])
+  })
+  .catch((err) => console.log(err));
+})
 
 // Start the Express.js web server
 app.listen(port, () => console.log(`Express.js API listening on port ${port}`));

@@ -119,6 +119,13 @@ module.exports = {
           `${userBalanceInfo.amount} deducted from user ${userId} balance`
         );
       }
+      if (userBalanceInfo.transaction_type == "REFUND") {
+        const newBalance = currentBalance + userBalanceInfo.amount;
+        await updateDoc(docRef, { balance: newBalance });
+        console.log(
+          `User ${userId} refunded ${userBalanceInfo.amount} successfully`
+        );
+      }
     } else {
       return { error: "User does not exist" };
     }
@@ -154,6 +161,28 @@ module.exports = {
       await updateDoc(docRef, { totalSales: updatedSales });
       console.log(`Bank Total Sales updated to be ${updatedSales}`);
     }
+    if (bankBalanceInfo.transaction_type == 'REFUND') {
+      const currentSales = docSnap.data().totalSales;
+      const updatedSales= currentSales - bankBalanceInfo.amount;
+
+      await updateDoc(docRef, {
+        totalDeposits: updatedDeposits,
+        totalSales: updatedSales,
+      });
+
+      console.log(`Bank Total Deposits updated to be ${updatedDeposits} and Bank Total Sales updated to be ${updatedSales}`);
+    }
+  },
+
+  getEventRegistrationsFirebase: async (eventTitle) => {
+    const querySnapshot = await getDocs(collection(db, "registrations"));
+    const registrationInfos = [];
+    querySnapshot.forEach((doc) => {
+      if (doc.data().eventTitle === eventTitle) {
+        registrationInfos.push(doc.data());
+      }
+    });
+    return registrationInfos;
   },
 
   getEventsFirebase: async () => {
@@ -195,4 +224,22 @@ module.exports = {
     const docId = docData.userId + docData.eventTitle;
     await setDoc(doc(db, "registrations", docId.toString()), docData);
   },
+
+  updateRegistrationFirebase: async (registrationInfo) => {
+    docData = {
+      userId: registrationInfo.user_id.toString(),
+      eventTitle: registrationInfo.event_title,
+      status: registrationInfo.status,
+    };
+    
+    const docId = docData.userId + docData.eventTitle;
+    const docRef = doc(db, "registrations", docId.toString());
+
+    // updating the status of the registration after raffle
+    await updateDoc(docRef,{
+      status: docData.status
+    })
+    // await setDoc(doc(db, "registrations", docId.toString()), docData);
+  },
+
 };

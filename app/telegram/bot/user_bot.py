@@ -18,8 +18,8 @@ from sys import platform
 load_dotenv()
 
 # Environment Variables
-TELE_TOKEN_TEST = os.getenv("TELE_TOKEN_TEST")
-PROVIDER_TOKEN = os.getenv("PROVIDER_TOKEN")
+TELE_TOKEN_TEST = "5756526738:AAFw_S43pkP1rQV1vw0WVsNil_xrV25aWAc"
+PROVIDER_TOKEN = "284685063:TEST:YTFkN2IzNmI1MWUz"
 
 # Logging
 logging.basicConfig(
