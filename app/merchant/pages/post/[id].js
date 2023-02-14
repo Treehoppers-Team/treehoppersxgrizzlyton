@@ -3,12 +3,64 @@ import Event from "../../components/event";
 import User from "../../components/user";
 import { useEffect, useState } from "react";
 import { Box, Skeleton, SkeletonText } from "@chakra-ui/react";
+import QrReader from 'react-qr-scanner';
 
 const Content = () => {
   const router = useRouter();
   const [event, setEvent] = useState({});
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState({name:"",userId:"",eventTitle:"",status:""});
+  const [scan, setScan] = useState(false);
+  const attendees = users.filter((user) => {
+    return user.status.toLowerCase() === "successful";
+  })
+
+  const openScanner = () => {
+    if (scan) {
+      setScan(false);
+    } else {
+      setScan(true);
+    }
+  }
+
+  const handleScan = (data) => {
+    console.log("scanning")
+    if (data) {
+      const parsedData = JSON.parse(data.text);
+
+
+
+      // check if parsedData user id is inside the attendees userid
+      const user = attendees.find((user) => {
+        return user.id === parsedData.userId;
+      })
+
+      if (parsedData.eventTitle !== event.title) {
+        alert("QR code is not for this event!");
+        return;
+      }
+      else if (!user) {
+        alert("User is not registered for this event!");
+        return;
+      } else {
+        getUserInfo(parsedData.userId).then((res) => {
+          setResult({
+            name: res.name,
+            userId: parsedData.userId,
+            eventTitle: parsedData.eventTitle,
+            status: parsedData.status,
+          });
+        })
+      }
+
+
+    }
+  };
+
+  const handleError = err => {
+    console.error(err);
+  };
 
   async function getEvents() {
     const res = await fetch("http://localhost:3000/viewEvents");
@@ -90,12 +142,43 @@ const Content = () => {
                     name={user.name}
                     contact={user.contact}
                     handle={user.handle}
-                    pending={user.status.toLowerCase() === "pending" || user.status.toLowerCase() === "unsuccessful" ? true : false}
+                    pending={
+                      user.status.toLowerCase() === "pending" ||
+                      user.status.toLowerCase() === "unsuccessful"
+                        ? true
+                        : false
+                    }
                   />
                 </div>
               );
             })}
           </div>
+          <div className="my-10 flex justify-center">
+          <button
+            onClick={openScanner}
+            className="flex flex-wrap w-1/6 items-center mx-1 text-white bg-green-500 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center"
+          >
+            {scan ? "Close Scanner" : "Open Scanner"}
+          </button>
+          </div>
+
+          {scan ? (
+            <>
+              <h1 className="mt-4 font-bold text-3xl text-center">Scanner</h1>
+              <div className="mx-auto my-5">
+                <p>Name: {result.name}</p>
+                <QrReader
+                  delay={200}
+                  onError={handleError}
+                  onScan={handleScan}
+                  style={{
+                    height: 240,
+                    width: 320,
+                  }}
+                />
+              </div>
+            </>
+          ) : null}
         </>
       ) : (
         <Box margin="2" padding="2" boxShadow="lg" bg="white">

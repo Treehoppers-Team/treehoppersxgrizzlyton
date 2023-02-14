@@ -3,7 +3,6 @@ import logo from "../public/mynt.webp";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import {signIn, signOut, useSession} from "next-auth/react";
 import { Card, CardBody, CardFooter, Stack, Heading, Text, Button, SkeletonText, Box } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
 
@@ -37,13 +36,7 @@ interface MobileNavProps {
 
 function MobileNav({ open, setOpen }: MobileNavProps) {
   const [address, setAddress] = useState<string[]>([]);
-  const callback = (address: string[]) => {
-    setAddress(address);
-  };
-  const { data: session, status } = useSession();
-  const router = useRouter();
-	const loading = status === 'loading';
-  const isLoggedIn = !!session?.user;
+
   return (
     <div
       className={`absolute top-0 left-0 h-screen w-screen bg-white transform ${
@@ -81,49 +74,6 @@ function MobileNav({ open, setOpen }: MobileNavProps) {
         >
           About
         </Link>
-        <div className="flex flex-wrap">
-            {loading ? null : (
-              <>
-                {/* {session?.user?.image ? (
-                  <Image
-                    height={32}
-                    width={32}
-                    src={session?.user?.image}
-                    alt=""
-                  />
-                ) : null} */}
-                {/* <button
-                  className="bg-[#00C48A] text-white font-bold py-2 px-4 rounded hover:bg-[#017250]"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (isLoggedIn) {
-                      router.push("/api/auth/signout");
-                      signOut();
-                    } else {
-                      router.push("/api/auth/signin");
-                      signIn();
-                    }
-                  }}
-                >
-                  {isLoggedIn ? "Sign out" : "Sign in"}
-                </button>
-                <div className="flex flex-wrap items-center m-1">
-                  {session?.user ? (
-                    <>
-                      <a>You are signed in as</a>&nbsp;
-                      <a className="font-bold">
-                        {session.user.email ?? session.user.name}
-                      </a>
-                    </>
-                  ) : (
-                    <a>You are not signed in</a>
-                  )}
-                </div> */}
-
-{/* <App callback={callback} /> */}
-              </>
-            )}
-          </div>
 
       </div>
     </div>
@@ -136,10 +86,7 @@ export default function Navbar() {
     setAddress(address);
   };
   const [open, setOpen] = useState(false);
-  const { data: session, status } = useSession();
-  const router = useRouter();
-	const loading = status === 'loading';
-  const isLoggedIn = !!session?.user;
+
   return (
     <nav className="flex filter bg-blackdrop-shadow-md border-b border-black px-2 py-2 h-20 items-center">
       <MobileNav open={open} setOpen={setOpen} />
@@ -183,50 +130,6 @@ export default function Navbar() {
         <div className="hidden md:flex">
           <NavLink to="/createEvent">Create Event</NavLink>
           <NavLink to="/about">About</NavLink>
-          <div className="flex flex-wrap">
-            {loading ? null : (
-              <>
-                {/* {session?.user?.image ? (
-                  <Image
-                    height={32}
-                    width={32}
-                    src={session?.user?.image}
-                    alt=""
-                  />
-                ) : null} */}
-                {/* <button
-                  className="bg-[#00C48A] text-white font-bold py-2 px-4 rounded hover:bg-[#017250]"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (isLoggedIn) {
-                      router.push("/api/auth/signout");
-                      signOut();
-                    } else {
-                      router.push("/api/auth/signin");
-                      signIn();
-                    }
-                  }}
-                >
-                  {isLoggedIn ? "Sign out" : "Sign in"}
-                </button>
-                <div className="flex flex-wrap items-center m-1">
-                  {session?.user ? (
-                    <>
-                      <a>You are signed in as</a>&nbsp;
-                      <a className="font-bold">
-                        {session.user.email ?? session.user.name}
-                      </a>
-                    </>
-                  ) : (
-                    <a>You are not signed in</a>
-                  )}
-                </div> */}
-                {/* <App callback={callback} /> */}
-
-
-              </>
-            )}
-          </div>
         </div>
       </div>
     </nav>

@@ -142,7 +142,7 @@ async def redeem(update: Update, context: ContextTypes.DEFAULT_TYPE):
             eventTitle = events['eventTitle']
             status = events['status']
             user_id = events['userId']
-            if "success" in status: # if status == 'success' did not work strange
+            if "SUCCESSFUL" in status: # if status == 'success' did not work strange
                 registered_events[eventTitle] = {'userId':user_id,'status':status,'eventTitle':eventTitle}
                 reply_string += f'\n {count}. {eventTitle}'
                 count += 1
