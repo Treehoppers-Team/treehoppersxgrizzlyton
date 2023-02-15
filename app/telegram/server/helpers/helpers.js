@@ -166,11 +166,10 @@ module.exports = {
       const updatedSales= currentSales - bankBalanceInfo.amount;
 
       await updateDoc(docRef, {
-        totalDeposits: updatedDeposits,
         totalSales: updatedSales,
       });
 
-      console.log(`Bank Total Deposits updated to be ${updatedDeposits} and Bank Total Sales updated to be ${updatedSales}`);
+      console.log(`Bank Total Sales updated to be ${updatedSales}`);
     }
   },
 
