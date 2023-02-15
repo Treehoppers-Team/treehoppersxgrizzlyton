@@ -308,6 +308,7 @@ async def proceed_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
         currency="SGD",
         prices=[LabeledPrice("Ticket Price", topup_amount * 100)]
     )
+    return ConversationHandler.END
 
 
 async def precheckout(update: Update, context: ContextTypes.DEFAULT_TYPE):
