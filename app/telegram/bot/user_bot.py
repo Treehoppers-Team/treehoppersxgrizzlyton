@@ -14,7 +14,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-TELE_TOKEN_TEST = "5756526738:AAFw_S43pkP1rQV1vw0WVsNil_xrV25aWAc"
+# TELE_TOKEN_TEST = "5756526738:AAFw_S43pkP1rQV1vw0WVsNil_xrV25aWAc"
+TELE_TOKEN_TEST = os.getenv("TELE_TOKEN_TEST")
 PROVIDER_TOKEN = "284685063:TEST:YTFkN2IzNmI1MWUz"
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
