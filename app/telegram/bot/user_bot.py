@@ -18,8 +18,10 @@ from sys import platform
 load_dotenv()
 
 # Environment Variables
-TELE_TOKEN_TEST = "5756526738:AAFw_S43pkP1rQV1vw0WVsNil_xrV25aWAc"
-PROVIDER_TOKEN = "284685063:TEST:YTFkN2IzNmI1MWUz"
+# TELE_TOKEN_TEST = "5756526738:AAFw_S43pkP1rQV1vw0WVsNil_xrV25aWAc"
+# PROVIDER_TOKEN = "284685063:TEST:NWI0MWExMzZjNmMw"
+TELE_TOKEN_TEST = os.getenv("TELE_TOKEN_TEST")
+PROVIDER_TOKEN = os.getenv("PROVIDER_TOKEN")
 
 # Logging
 logging.basicConfig(
@@ -148,7 +150,7 @@ async def redeem(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 count += 1
 
         if len(registered_events) == 0: # if raffle was not successful - he did not get the ticket
-            text = "You have no registered events"
+            text = "You have no successful registrations"
             await update.message.reply_text(text, parse_mode='Markdown')
             return ConversationHandler.END
         
@@ -264,7 +266,7 @@ async def register_new_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def get_topup_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    reply_keyboard = [[10, 50, 100]]
+    reply_keyboard = [["10", "50", "100"]]
     await update.message.reply_text(
         "How much would you like to top up?\n"
         "Please select either $10/50/100",
