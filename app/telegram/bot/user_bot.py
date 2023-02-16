@@ -4,12 +4,14 @@ import pyqrcode
 import requests
 import datetime
 from telegram import (
-    Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, LabeledPrice,
+    Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, LabeledPrice, InlineKeyboardButton,
+    InlineKeyboardMarkup
 )
+from telegram.constants import ParseMode
 from telegram.ext import (
     ApplicationBuilder, ContextTypes, CommandHandler,
     ConversationHandler, MessageHandler, StringCommandHandler,
-    filters, PreCheckoutQueryHandler, CallbackQueryHandler, CallbackContext
+    filters, PreCheckoutQueryHandler, CallbackQueryHandler, CallbackContext,
 )
 import os
 from dotenv import load_dotenv
@@ -37,15 +39,34 @@ NEW_USER, PROCEED_PAYMENT, TITLE, VERIFY_BALANCE, REDEEM = range(5)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    # Sending sticker
+    # await context.bot.send_sticker(
+    #     chat_id=update.effective_chat.id,
+    #     sticker="CAACAgUAAxkBAAEdQ8Zj7ZYFybawCJjuDjSBkPVar-3wzgACmQgAAu5VcVe3bMjyKRHSlC4E",
+    # )
+    # Buttons
+    # keyboard = [
+    #     [
+    #         InlineKeyboardButton("Option 1", callback_data="1"),
+    #         InlineKeyboardButton("Option 2", callback_data="2"),
+    #     ],
+    #     [InlineKeyboardButton("Option 3", callback_data="3")],
+    # ]
+    # reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(
+        "[​​​​​​​​​​​](https://bafybeicugtsyjqhdisuvug35rathnyxwac7km5gkl66g2jwvebdgbis354.ipfs.w3s.link/mynt.webp) *Welcome to Mynt ticketing bot!* \n"
         "/viewWalletBalance - View the current Balance of your Mynt wallet\n"
         "/viewTransactionHistory - View all transactions for your Mynt wallet\n"
         "/topUpWallet - Top up your Mynt wallet\n\n"
         "/viewEvents - View all ongoing events\n"
         "/register - Register for an ongoing event \n"
         "/checkRegistration - View registration status (pending/successful/unsuccessful) for an event \n"
-        "/redeem - Redeem your ticket at the event venue\n"
+        "/redeem - Redeem your ticket at the event venue\n",
+        parse_mode="markdown", 
+        # reply_markup=reply_markup
     )
+    return ConversationHandler.END
 
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -58,24 +79,14 @@ async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id=update.effective_chat.id,
         text="Sorry, I didn't understand that command."
     )
-    
-    
+
+
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
-    logger.error(msg="Exception while handling an update:", exc_info=context.error)
-    tb_list = traceback.format_exception(None, context.error, context.error.__traceback__)
-    tb_string = "".join(tb_list)
-    update_str = update.to_dict() if isinstance(update, Update) else str(update)
-    message = (
-        f"An exception was raised while handling an update\n"
-        f"<pre>update = {html.escape(json.dumps(update_str, indent=2, ensure_ascii=False))}"
-        "</pre>\n\n"
-        f"<pre>context.chat_data = {html.escape(str(context.chat_data))}</pre>\n\n"
-        f"<pre>context.user_data = {html.escape(str(context.user_data))}</pre>\n\n"
-        f"<pre>{html.escape(tb_string)}</pre>"
-    )
-    await context.bot.send_message(
-        chat_id=DEVELOPER_CHAT_ID, text=message, parse_mode=ParseMode.HTML
-    )
+    logger.error(msg="Exception while handling an update:",
+                 exc_info=context.error)
+    await update.message.reply_text(
+        "Sorry, an unexpected error occurred \n"
+        "Please try again later")
     return ConversationHandler.END
 
 
@@ -141,6 +152,8 @@ redeem: Displays events that the user has successfully registered for and are ye
 check_authorisation (merchant): should be in the merchant side. we get the telegram id, use getRegistrations Firebase to see what the user has registered for, compare to the current event and send a message back to the user and authoriser saying {handle} has been verified for XX event
 =============================================================================================
 """
+
+
 async def redeem(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     logger.info(f"Retrieving registrations for User: {user_id}")
@@ -155,7 +168,7 @@ async def redeem(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
     else:
-        registered_events ={} 
+        registered_events = {}
         reply_string = ''
         count = 1
 
@@ -163,23 +176,25 @@ async def redeem(update: Update, context: ContextTypes.DEFAULT_TYPE):
             eventTitle = events['eventTitle']
             status = events['status']
             user_id = events['userId']
-            if "SUCCESSFUL" in status: # if status == 'success' did not work strange
-                registered_events[eventTitle] = {'userId':user_id,'status':status,'eventTitle':eventTitle}
+            if "SUCCESSFUL" in status:  # if status == 'success' did not work strange
+                registered_events[eventTitle] = {
+                    'userId': user_id, 'status': status, 'eventTitle': eventTitle}
                 reply_string += f'\n {count}. {eventTitle}'
                 count += 1
 
-        if len(registered_events) == 0: # if raffle was not successful - he did not get the ticket
+        if len(registered_events) == 0:  # if raffle was not successful - he did not get the ticket
             text = "You have no successful registrations"
             await update.message.reply_text(text, parse_mode='Markdown')
             return ConversationHandler.END
-        
+
         reply_string += '\n\n Which one would you like to redeem?'
 
         reply_keyboard = [list(registered_events.keys())]
         print('--------------------')
         print(reply_keyboard)
         print('--------------------')
-        context.user_data['registered_events'] = registered_events #very important to keey the information
+        # very important to keey the information
+        context.user_data['registered_events'] = registered_events
         print('--------------------')
         print(context.user_data['registered_events'])
         print('--------------------')
@@ -191,6 +206,7 @@ async def redeem(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_keyboard, one_time_keyboard=True, input_field_placeholder="ShengSiong/Grab?"
             ),)
         return REDEEM
+
 
 async def show_QR(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ticket = update.message.text
@@ -510,7 +526,7 @@ async def verify_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await complete_registration(update, context)
         return ConversationHandler.END
 
-    
+
 async def complete_purchase(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     event_price = context.user_data["event_price"]
@@ -520,8 +536,8 @@ async def complete_purchase(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'user_id': user_id,
         'amount': event_price,
         'transaction_type': "SALE",
-        'timestamp': timestamp, 
-        'event_title': event_title, 
+        'timestamp': timestamp,
+        'event_title': event_title,
     }
     response = requests.post(endpoint_url + "/ticketSale", json=data)
     logger.info("Saving payment records")
@@ -537,8 +553,8 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
     logger.info(f'{user_id} has successfully regisered for {event_title}')
     data = {
         'user_id': user_id,
-        'event_title': event_title, 
-        'status': 'PENDING', 
+        'event_title': event_title,
+        'status': 'PENDING',
     }
     response = requests.post(endpoint_url + "/insertRegistration", json=data)
     if response.status_code == 200:
@@ -561,7 +577,7 @@ if __name__ == '__main__':
             CommandHandler('checkRegistration', check_registration),
             CommandHandler('register', register_for_event),
             CommandHandler('showQR', show_QR),
-            CommandHandler('redeem',redeem)
+            CommandHandler('redeem', redeem)
         ],
         states={
             NEW_USER: [MessageHandler(filters.Regex('^([A-Za-z ]+): ([0-9A-Za-z.+-]+)$'), register_new_user)],
