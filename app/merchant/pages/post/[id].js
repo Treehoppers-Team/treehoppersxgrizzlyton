@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import { Box, Skeleton, SkeletonText } from "@chakra-ui/react";
 import QrReader from 'react-qr-scanner';
 
-const TELEGRAM_TOKEN = process.env.NEXT_PUBLIC_TEST_TOKEN
-
+// const TELEGRAM_TOKEN = process.env.NEXT_PUBLIC_TEST_TOKEN
+const TELEGRAM_TOKEN = "5756526738:AAFw_S43pkP1rQV1vw0WVsNil_xrV25aWAc"
 
 const Content = () => {
   const router = useRouter();
@@ -33,8 +33,6 @@ const Content = () => {
       console.log(data)
       const parsedData = JSON.parse(data.text);
 
-
-
       // check if parsedData user id is inside the attendees userid
       const user = attendees.find((user) => {
         return user.id === parsedData.userId;
@@ -45,7 +43,6 @@ const Content = () => {
         const chat_id = parsedData.chatId;
         console.log(chat_id)
         const telegramPush = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${chat_id}&text=Verified`
-        
         fetch(telegramPush).then((res) => {
           console.log(res)
         })
@@ -63,9 +60,7 @@ const Content = () => {
       else {
         alert("User is not registered for this event!");
         return;
-      } 
-
-
+      }
     }
   };
 

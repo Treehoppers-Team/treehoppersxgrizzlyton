@@ -5,6 +5,7 @@ import { ref, uploadBytes } from "firebase/storage";
 import axios from "axios";
 
 const JWT="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJjODA1MzJhMC01YmU2LTQyZTItYmRlNS1hMTkwYWZkMzNkZjkiLCJlbWFpbCI6ImFkdmFpdC5iaGFyYXQuZGVzaHBhbmRlQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImlkIjoiRlJBMSIsImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxfSx7ImlkIjoiTllDMSIsImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxfV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiJhMTkyMTNjOGE4YzM1MGNiMjMwMCIsInNjb3BlZEtleVNlY3JldCI6IjA1YjcwMTY0OWEzMGUxOWY5NDE1MzY2OWE4MDNiYjczZGY4MTU5ODIxM2ZiNzlmM2MyYzk3MGViOWQyMjFlNmUiLCJpYXQiOjE2NzUzNzI0MjF9.mmLYahJJ-etF5u_sRdOyJ2irM7F848vMaJ_Z9rK2G0A"
+const TELEGRAM_TOKEN = "5756526738:AAFw_S43pkP1rQV1vw0WVsNil_xrV25aWAc"
 
 interface EventFormProps {
   eventName2: string;
@@ -109,8 +110,6 @@ const RaffleForm = ({
     console.log("winners",winners)
     console.log("losers",losers)
 
-    let totalRefunds = 0;
-
     for (let i = 0; i < losers.length; i++) {
       
       const data = {
@@ -146,13 +145,7 @@ const RaffleForm = ({
       .catch((error: any) => {
         console.log(error);
       });
-
-      totalRefunds += price2;
-
     }
-
-    console.log(totalRefunds)
-
 
 
     for (let i = 0; i < winners.length; i++) {
@@ -165,8 +158,13 @@ const RaffleForm = ({
       axios
         .post("http://localhost:3000/updateRegistration", data)
         .then(() => axios.post("http://localhost:3000/mintNft", data))
-        .then((response: { data: any; }) => {
-          console.log(response.data);
+        .then((response) => {
+          // insert telegram notificiation for user upon successful mint
+          const telegramPush = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${winners[i].chat_id}&text=${response.data.mintAccount}`
+          fetch(telegramPush).then((res) => {
+            console.log(res)
+          })
+          console.log(response.data.mintAccount);
         })
         .catch((error: any) => {
           console.log(error);
@@ -230,7 +228,6 @@ const RaffleForm = ({
       | undefined,
     image: File
   ) => {
-    // const dbInstance = collection(database, '/MerchantCollection');
     if (data) {
       const title = data.title + "-nft";
       const dbInstance = doc(database, "/nfts", title + dateTime2);
