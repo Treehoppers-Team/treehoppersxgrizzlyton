@@ -35,38 +35,50 @@ logger = logging.getLogger(__name__)
 # Global Variables
 endpoint_url = "http://localhost:3000"
 
-NEW_USER, PROCEED_PAYMENT, TITLE, VERIFY_BALANCE, REDEEM = range(5)
+ROUTE, NEW_USER, PROCEED_PAYMENT, TITLE, VERIFY_BALANCE, SHOW_QR = range(6)
 
+"""
+=============================================================================================
+start: Send bot description and provide user with wallet & event options, 
+cancel: Exit current action
+unknown: User sends an unknown commad/message/invalid response
+error_handler: Error occured during execution and user is informed
+=============================================================================================
+"""
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [
+            InlineKeyboardButton("Top Up Wallet", callback_data="top_up_wallet"),
+            InlineKeyboardButton("Register for an Event", callback_data="register_for_event"),
+        ],
+        [InlineKeyboardButton("Wallet", callback_data="wallet_options"),],
+        [InlineKeyboardButton("Event", callback_data="event_options"),]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    message = ("*Welcome to Mynt ticketing bot!*\n\n"
+               "This bot allows you to create a Mynt wallet so that you can easily purchase tickets for upcoming events.\n\n"
+               "To get started, please create a Mynt wallet by selecting Top Up Wallet.\n"
+               "Once you have sufficient balance in your Mynt wallet, you can purchase a ticket for an event by selecting Register for an Event.\n\n"
+               "You can access other *wallet* & *event* functionalities by clicking on the respective buttons below.")
 
-    # Sending sticker
-    # await context.bot.send_sticker(
-    #     chat_id=update.effective_chat.id,
-    #     sticker="CAACAgUAAxkBAAEdQ8Zj7ZYFybawCJjuDjSBkPVar-3wzgACmQgAAu5VcVe3bMjyKRHSlC4E",
-    # )
-    # Buttons
-    # keyboard = [
-    #     [
-    #         InlineKeyboardButton("Option 1", callback_data="1"),
-    #         InlineKeyboardButton("Option 2", callback_data="2"),
-    #     ],
-    #     [InlineKeyboardButton("Option 3", callback_data="3")],
-    # ]
-    # reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text(
-        "[​​​​​​​​​​​](https://bafybeicugtsyjqhdisuvug35rathnyxwac7km5gkl66g2jwvebdgbis354.ipfs.w3s.link/mynt.webp) *Welcome to Mynt ticketing bot!* \n"
-        "/viewWalletBalance - View the current Balance of your Mynt wallet\n"
-        "/viewTransactionHistory - View all transactions for your Mynt wallet\n"
-        "/topUpWallet - Top up your Mynt wallet\n\n"
-        "/viewEvents - View all ongoing events\n"
-        "/register - Register for an ongoing event \n"
-        "/checkRegistration - View registration status (pending/successful/unsuccessful) for an event \n"
-        "/redeem - Redeem your ticket at the event venue\n",
-        parse_mode="markdown", 
-        # reply_markup=reply_markup
-    )
-    return ConversationHandler.END
+    if update.callback_query:
+        query = update.callback_query
+        await query.answer()
+        await query.edit_message_text(
+            text=message, 
+            parse_mode="markdown", 
+            reply_markup=reply_markup
+        )
+    else:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id, 
+            text=message, 
+            parse_mode="markdown", 
+            reply_markup=reply_markup
+        )
+
+    return ROUTE
 
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -82,52 +94,100 @@ async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
-    logger.error(msg="Exception while handling an update:",
-                 exc_info=context.error)
-    await update.message.reply_text(
-        "Sorry, an unexpected error occurred \n"
+    logger.error(msg="Exception while handling an update:", exc_info=context.error)
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Sorry, an unexpected error occurred \n"
         "Please try again later")
     return ConversationHandler.END
 
-
 """"
 =============================================================================================
-view_wallet: Display in-app wallet (should eventually be integrated with viewwalletBalance, 
-    viewTransactionHistory and TopUp Wallet ), needs to be web app (either created in react etc)
+wallet_options: Modify the current text (start msg) and display wallet options
+event_options: Modify the current text (start msg) and display event options
+send_default_message: Send message displaying the text(variable) passed, as well as Menu option
+update_default_message: Update the previous message with the text(variable) passed, as well as Menu Option
 =============================================================================================
 """
 
+async def wallet_options(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    keyboard = [
+        [InlineKeyboardButton("View Wallet Balance",callback_data="view_wallet_balance"),],
+        [InlineKeyboardButton("View Transaction History",callback_data="view_transaction_history"),],
+        [InlineKeyboardButton("Top Up Wallet", callback_data="top_up_wallet"),],
+        [InlineKeyboardButton("< Back", callback_data="start"),],
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await query.edit_message_text(
+        text="Please select one of the following options below", reply_markup=reply_markup
+    )
+    return ROUTE
 
-async def view_wallet(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    return ConversationHandler.END
 
+async def event_options(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    keyboard = [
+        [InlineKeyboardButton("View Ongoing Events", callback_data="view_events"),],
+        [InlineKeyboardButton("Register for an Event", callback_data="register_for_event"),],
+        [InlineKeyboardButton("View Registration Status", callback_data="check_registration"),],
+        [InlineKeyboardButton("Redeem Event Ticket", callback_data="redeem"),],
+        [InlineKeyboardButton("< Back", callback_data="start"),],
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await query.edit_message_text(
+        text="Please select one of the following options below", reply_markup=reply_markup
+    )
+    return ROUTE
+
+
+async def send_default_message(update, context: ContextTypes.DEFAULT_TYPE, text):
+    keyboard = [[InlineKeyboardButton("< Back to Menu", callback_data="start"),],]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=text,
+        reply_markup=reply_markup, 
+    )
+    
+    
+async def update_default_message(update, text):
+    keyboard = [[InlineKeyboardButton("< Back to Menu", callback_data="start"),],]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    query = update.callback_query
+    await query.edit_message_text(
+        text=text,
+        reply_markup=reply_markup,
+        parse_mode='Markdown',
+    )
 
 """"
 =============================================================================================
-view_wallet_balance: Display balance of in-app wallet
-view_transaction_history: Display all transactions for the wallet
+get_user_id_from_query: Reusable function for retrieving user id after a user has clicked a button
+view_wallet_balance: Display balance of user's wallet
+view_transaction_history: Display transaction history of user
 =============================================================================================
 """
-
+async def get_user_id_from_query(update):
+    query = update.callback_query
+    await query.answer()
+    user_id = query.from_user.id
+    return user_id
 
 async def view_wallet_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
+    user_id = await get_user_id_from_query(update)
     logger.info(f"Retrieving wallet balance for User: {user_id}")
     response = requests.get(endpoint_url + f"/viewWalletBalance/{user_id}")
     response_data = response.json()
     user_balance = response_data['balance']
-    await update.message.reply_text(f'Your wallet balance is ${user_balance}')
-    return ConversationHandler.END
 
+    text=f'Your wallet balance is ${user_balance}'
+    await update_default_message(update, text)
+    return ROUTE
 
-async def view_transaction_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
-    logger.info(f"Retrieving transaction history for User: {user_id}")
-    response = requests.get(
-        endpoint_url + f"/viewTransactionHistory/{user_id}")
-    response_data = response.json()
-
-    # Format Response data
+def format_txn_history(response_data):
     if len(response_data) > 0:
         text = "Your transaction History is as follows \n\n"
 
@@ -143,69 +203,77 @@ async def view_transaction_history(update: Update, context: ContextTypes.DEFAULT
                 f"Event: {event}\n\n"
     else:
         text = "You have no prior transactions"
-    await update.message.reply_text(text, parse_mode='Markdown')
-    return ConversationHandler.END
+    return text
+    
+async def view_transaction_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = await get_user_id_from_query(update)
+    logger.info(f"Retrieving transaction history for User: {user_id}")
+    response = requests.get(endpoint_url + f"/viewTransactionHistory/{user_id}")
+    response_data = response.json()
+    text = format_txn_history(response_data)
+
+    await update_default_message(update, text)
+    return ROUTE
 
 """"
 =============================================================================================
-redeem: Displays events that the user has successfully registered for and are yet to be redeemed. After user picks an event, show_QR will be called that will display a QR code containing information on the user's id, event status and event title
-check_authorisation (merchant): should be in the merchant side. we get the telegram id, use getRegistrations Firebase to see what the user has registered for, compare to the current event and send a message back to the user and authoriser saying {handle} has been verified for XX event
+redeem: Displays events that the user has successfully registered for and are yet to be redeemed. 
+    After user picks an event, show_QR will be called that will display a QR code containing information 
+    on the user's id, event status and event title
+check_authorisation (merchant): should be in the merchant side. we get the telegram id, 
+    use getRegistrations Firebase to see what the user has registered for, compare to the current event 
+    and send a message back to the user and authoriser saying {handle} has been verified for XX event
 =============================================================================================
 """
 
+def get_successful_registrations(response_data):
+    registered_events = {}
+    reply_string = ''
+    count = 1
 
+    for events in response_data:
+        eventTitle = events['eventTitle']
+        status = events['status']
+        user_id = events['userId']
+        if "SUCCESSFUL" in status: 
+            registered_events[eventTitle] = {
+                'userId': user_id, 'status': status, 'eventTitle': eventTitle}
+            reply_string += f'\n {count}. {eventTitle}'
+            count += 1
+            
+    return registered_events, reply_string
+    
+    
 async def redeem(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
+    user_id = await get_user_id_from_query(update)
     logger.info(f"Retrieving registrations for User: {user_id}")
-    response = requests.get(
-        endpoint_url + f"/getRegistrations/{user_id}")
+    response = requests.get(endpoint_url + f"/getRegistrations/{user_id}")
     response_data = response.json()
 
-    # Format Response data
     if len(response_data) <= 0:
-        text = "You have no registered events"
-        await update.message.reply_text(text, parse_mode='Markdown')
-        return ConversationHandler.END
+        await send_default_message(update, context, f"You have no registered events")
+        return ROUTE
 
     else:
-        registered_events = {}
-        reply_string = ''
-        count = 1
+        registered_events, reply_string = get_successful_registrations(response_data)
+        if len(registered_events) == 0: # if raffle was not successful - he did not get the ticket
+            await send_default_message(update, context, f"You have no successful registrations")
+            return ROUTE
+        
+        else:
+            reply_string += '\n\n Which one would you like to redeem?'
+            reply_keyboard = [list(registered_events.keys())]
+            # very important to key the information
+            context.user_data['registered_events'] = registered_events
 
-        for events in response_data:
-            eventTitle = events['eventTitle']
-            status = events['status']
-            user_id = events['userId']
-            if "SUCCESSFUL" in status:  # if status == 'success' did not work strange
-                registered_events[eventTitle] = {
-                    'userId': user_id, 'status': status, 'eventTitle': eventTitle}
-                reply_string += f'\n {count}. {eventTitle}'
-                count += 1
-
-        if len(registered_events) == 0:  # if raffle was not successful - he did not get the ticket
-            text = "You have no successful registrations"
-            await update.message.reply_text(text, parse_mode='Markdown')
-            return ConversationHandler.END
-
-        reply_string += '\n\n Which one would you like to redeem?'
-
-        reply_keyboard = [list(registered_events.keys())]
-        print('--------------------')
-        print(reply_keyboard)
-        print('--------------------')
-        # very important to keey the information
-        context.user_data['registered_events'] = registered_events
-        print('--------------------')
-        print(context.user_data['registered_events'])
-        print('--------------------')
-
-        await update.message.reply_text(
-            "You have available tickets! You currently have: \n"
-            f'{reply_string}',
-            reply_markup=ReplyKeyboardMarkup(
-                reply_keyboard, one_time_keyboard=True, input_field_placeholder="ShengSiong/Grab?"
-            ),)
-        return REDEEM
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id, 
+                text="You have available tickets! You currently have: \n"
+                f'{reply_string}',
+                reply_markup=ReplyKeyboardMarkup(
+                    reply_keyboard, one_time_keyboard=True,
+                ),)
+            return SHOW_QR
 
 
 async def show_QR(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -217,9 +285,6 @@ async def show_QR(update: Update, context: ContextTypes.DEFAULT_TYPE):
     registered_events[ticket]['chatId'] = user_chat_id
     qr_information = registered_events[ticket]
     qr_information_str = json.dumps(qr_information)
-    print('--------------------')
-    print(qr_information)
-    print('--------------------')
 
     await update.message.reply_text(f'Show this QR code to redeem your ticket for {ticket}. This QR code belongs to {username}')
     url = pyqrcode.create(qr_information_str)
@@ -249,24 +314,23 @@ successful_payment: Confirms successful payment and sends API request to update 
 
 
 async def top_up_wallet(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data["new_user"] = await is_new_user(update, context)
+    user_id = await get_user_id_from_query(update)
+    context.user_data["new_user"] = await is_new_user(user_id)
     if context.user_data["new_user"] == True:
-        await update.message.reply_text(
-            'Please input your name and contact number in this format `name : contact`'
-        )
+        text='Please input your name and contact number in this format `name : contact`'
+        await update_default_message(update, text)
         return NEW_USER
 
     else:
-        await update.message.reply_text(
-            "Proceeding with existing user"
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="Proceeding with existing user"
         )
         await get_topup_amount(update, context)
-        print("top_up_wallet -> get_topup_amount")
         return PROCEED_PAYMENT
 
 
-async def is_new_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
+async def is_new_user(user_id):
     response = requests.get(endpoint_url + f"/getUserInfo/{user_id}")
     response_data = response.json()
     if response_data['name'] == "No Such User Exists":
@@ -302,11 +366,12 @@ async def register_new_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def get_topup_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_keyboard = [["10", "50", "100"]]
-    await update.message.reply_text(
-        "How much would you like to top up?\n"
-        "Please select either $10/50/100",
+    await context.bot.send_message(
+        text="How much would you like to top up?\n"
+             "Please select either $10/50/100",
+        chat_id=update.effective_chat.id, 
         reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard, one_time_keyboard=True, input_field_placeholder="10/50/100"
+            reply_keyboard, one_time_keyboard=True,
         )
     )
 
@@ -324,8 +389,8 @@ async def proceed_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
         currency="SGD",
         prices=[LabeledPrice("Ticket Price", topup_amount * 100)]
     )
-    return ConversationHandler.END
-
+    return ROUTE
+    
 
 async def precheckout(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("Validating invoice payload")
@@ -352,8 +417,12 @@ async def successful_payment(update: Update, context: ContextTypes.DEFAULT_TYPE)
     }
     response = requests.post(endpoint_url + "/topUpWallet", json=data)
     if response.status_code == 200:
-        await update.message.reply_text(f"You have successfully topped up ${topup_amount}!")
-    return ConversationHandler.END
+        text=f"You have successfully topped up ${topup_amount}!"
+        await send_default_message(update, context, text)
+
+    else:
+        await update.message.reply_text('An unexpected error occurred')
+        return ConversationHandler.END
 
 """"
 =============================================================================================
@@ -367,14 +436,8 @@ complete_purchase: Send API request to save payment records
 complete_registration: Send API request to save registration records
 =============================================================================================
 """
-
-
-async def view_events(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logger.info("Retrieving Events Information")
-    response = requests.get(endpoint_url + "/viewEvents")
-    response_data = response.json()
+def format_event_data(response_data):
     text = ""
-
     for event in response_data:
         event_title = event['title']
         event_description = event['description']
@@ -387,50 +450,75 @@ async def view_events(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Time: {event_time}\n" \
             f"Venue: {event_venue}\n" \
             f"Price: *{event_price}*\n\n"
-    text += "Use /register to register for any events that you are interested in"
+    return text
 
-    await update.message.reply_text(text, parse_mode='Markdown')
-    return ConversationHandler.END
-
-
-async def check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="Checking for events that you have registered for..."
-    )
-    user_id = update.message.from_user.id
-    logger.info(f'Checking status for {user_id}')
-    response = requests.get(endpoint_url + f"/getRegistrations/{user_id}")
+async def view_events(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info("Retrieving Events Information")
+    query = update.callback_query
+    await query.answer()    
+    response = requests.get(endpoint_url + "/viewEvents")
     response_data = response.json()
-    text = ""
+    text = format_event_data(response_data)
+    await update_default_message(update, text)
+    return ROUTE
 
-    # User has previously registered for events
-    if response_data:
+def format_registration_data(response_data):
+    text = ""
+    if response_data: # User has previously registered for events
         text += "These are your current registered events!\n\n"
         for event in response_data:
             event_title = event['eventTitle']
             status = event['status']
-
             text += f"Event Title: *{event_title}*\n" \
                 f"Registration Status: {status}\n\n" \
 
-    # User has no previous registrations
-    else:
-        text += "No events found! Use /register to register for an event!"
+    else: # User has no previous registrations
+        text += "You have not registered for any events!"
+    return text
+    
+async def check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = await get_user_id_from_query(update)
+    logger.info(f'Checking status for {user_id}')
+    response = requests.get(endpoint_url + f"/getRegistrations/{user_id}")
+    response_data = response.json()
+    text=format_registration_data(response_data)
+    await update_default_message(update, text)
+    return ROUTE
 
-    await update.message.reply_text(text, parse_mode='Markdown')
-    return ConversationHandler.END
-
-
+    
 async def register_for_event(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        'Please provide the title of the Event that you would like to register for'
-    )
-    return TITLE
+    query = update.callback_query
+    await query.answer()    
+    response = requests.get(endpoint_url + "/viewEvents")
+    response_data = response.json()
+
+    # Create mapping of event titles and their prices
+    events_dict = {}
+    for event in response_data:
+        title = event['title']
+        price = event['price']
+        events_dict[title] = price
+    context.user_data["events_dict"] = events_dict
+    event_title_list = events_dict.keys()
+    logger.info(f"Existing Event titles: {event_title_list}")
+    
+    if len(events_dict) == 0:
+        await update_default_message(update, "There are currently no ongoing events to register for")
+        return ROUTE
+    
+    else:
+        reply_keyboard = [[title for title in event_title_list]]
+        await context.bot.send_message(
+            text="Please select which event you would like to register for",
+            chat_id=update.effective_chat.id, 
+            reply_markup=ReplyKeyboardMarkup(
+                reply_keyboard, one_time_keyboard=True,
+            )
+        )
+        return TITLE
 
 
-async def get_previous_registrations(update: Update, event_title):
-    user_id = update.message.from_user.id
+def get_previous_registrations(user_id, event_title):
     logger.info(f'Checking previous registrations for {user_id}')
     response = requests.get(endpoint_url + f"/getRegistrations/{user_id}")
     response_data = response.json()
@@ -443,36 +531,25 @@ async def get_previous_registrations(update: Update, event_title):
 
     # Check if user is registering for the same event
     if event_title in registered_events:
-        await update.message.reply_text(
-            f'You have already registered for Event: {event_title} \n'
-            'You can only register once per event'
-        )
-        return ConversationHandler.END
+        return True
+        
+    return False
 
 
 async def validate_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
     event_title = update.message.text
     context.user_data["event_title"] = event_title
-    response = requests.get(endpoint_url + "/viewEvents")
-    response_data = response.json()
-
-    # Create mapping of event titles and their prices
-    events_dict = {}
-    for event in response_data:
-        title = event['title']
-        price = event['price']
-        events_dict[title] = price
-    event_title_list = events_dict.keys()
-    logger.info(f"Existing Event titles: {event_title_list}")
-
-    # User provided a valid event title
-    if event_title in event_title_list:
-        await update.message.reply_text(
-            f'You have provided a valid title'
-        )
-        await get_previous_registrations(update, event_title)
-
+    user_id = update.message.from_user.id
+    double_registration = get_previous_registrations(user_id, event_title)
+    if double_registration:
+        text=("You have already registered for this event. \n"
+            "You cannot register for the same event again.")
+        await send_default_message(update, context, text)
+        return ROUTE
+    
+    else:
         # Prompt user for payment confirmation
+        events_dict = context.user_data["events_dict"]
         event_price = events_dict[event_title]
         context.user_data["event_price"] = event_price
         reply_keyboard = [["Yes", "No"]]
@@ -480,28 +557,20 @@ async def validate_registration(update: Update, context: ContextTypes.DEFAULT_TY
             f'Do you wish to make a payment of ${event_price} for the event using your Mynt Wallet?\n'
             "Reply with Yes to confirm payment",
             reply_markup=ReplyKeyboardMarkup(
-                reply_keyboard, one_time_keyboard=True, input_field_placeholder="Yes/No"
+                reply_keyboard, one_time_keyboard=True,
             )
         )
         return VERIFY_BALANCE
-
-    # User provided and invalid event title
-    else:
-        await update.message.reply_text(
-            f'Event {event_title} does not exist, please provide a valid event title'
-        )
-        return TITLE
 
 
 async def verify_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
     payment_confirmation = update.message.text
     # User does not wish to proceed with making payment
     if payment_confirmation == "No":
-        await update.message.reply_text(
-            'You have declined to make a payment for the event ticket \n'
-            'We hope to see you again'
-        )
-        return ConversationHandler.END
+        text=('You have declined to make a payment for the event ticket \n'
+            'We hope to see you again')
+        await send_default_message(update, context, text)
+        return ROUTE
 
     # Verify user has sufficient balance in in-app wallet
     user_id = update.message.from_user.id
@@ -513,18 +582,17 @@ async def verify_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # User has insufficient balance
     if user_balance < event_price:
-        await update.message.reply_text(
-            f"You have insufficient balance in your wallet \n"
+        text=(f"You have insufficient balance in your wallet \n"
             f"Your current balance is ${user_balance} but the ticket price is ${event_price} \n"
-            "You /topUp to top up your Mynt Wallet"
-        )
-        return ConversationHandler.END
+            "Please top up your Mynt wallet!")
+        await send_default_message(update, context, text)
+        return ROUTE
 
     # User has sufficient balance
     else:
         await complete_purchase(update, context)
         await complete_registration(update, context)
-        return ConversationHandler.END
+        return ROUTE
 
 
 async def complete_purchase(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -550,7 +618,7 @@ async def complete_purchase(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     event_title = context.user_data["event_title"]
-    logger.info(f'{user_id} has successfully regisered for {event_title}')
+    logger.info(f'{user_id} has successfully registered for {event_title}')
     data = {
         'user_id': user_id,
         'event_title': event_title,
@@ -558,9 +626,12 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
     }
     response = requests.post(endpoint_url + "/insertRegistration", json=data)
     if response.status_code == 200:
-        await update.message.reply_text(f"You have successfully registered for {event_title}!")
+        text=f"You have successfully registered for {event_title}!"
+        await send_default_message(update, context, text)
+        return ROUTE
     else:
         await update.message.reply_text("Sorry, something went wrong with your registration")
+        return ConversationHandler.END
 
 
 if __name__ == '__main__':
@@ -570,29 +641,33 @@ if __name__ == '__main__':
         entry_points=[
             CommandHandler('start', start),
             CommandHandler('cancel', cancel),
-            CommandHandler('viewWalletBalance', view_wallet_balance),
-            CommandHandler('viewTransactionHistory', view_transaction_history),
-            CommandHandler('topUpWallet', top_up_wallet),
-            CommandHandler('viewEvents', view_events),
-            CommandHandler('checkRegistration', check_registration),
-            CommandHandler('register', register_for_event),
-            CommandHandler('showQR', show_QR),
-            CommandHandler('redeem', redeem)
         ],
         states={
+            ROUTE: {
+                CallbackQueryHandler(wallet_options, pattern="^wallet_options$"),
+                CallbackQueryHandler(view_wallet_balance,pattern="^view_wallet_balance$"),
+                CallbackQueryHandler(view_transaction_history, pattern="^view_transaction_history$"),
+                CallbackQueryHandler(top_up_wallet, pattern="^top_up_wallet$"),
+                CallbackQueryHandler(event_options, pattern="^event_options$"),
+                CallbackQueryHandler(view_events, pattern="^view_events$"),
+                CallbackQueryHandler(check_registration, pattern="^check_registration$"),
+                CallbackQueryHandler(register_for_event, pattern="^register_for_event$"),
+                CallbackQueryHandler(redeem, pattern="^redeem$"),
+                CallbackQueryHandler(start, pattern="^start$"),
+            },
             NEW_USER: [MessageHandler(filters.Regex('^([A-Za-z ]+): ([0-9A-Za-z.+-]+)$'), register_new_user)],
             PROCEED_PAYMENT: [MessageHandler(filters.Regex('^(10|50|100)$'), proceed_payment)],
             TITLE: [MessageHandler(filters.TEXT, validate_registration)],
             VERIFY_BALANCE: [MessageHandler(filters.Regex('^(Yes|No)$'), verify_balance)],
-            REDEEM: [MessageHandler(filters.TEXT, show_QR)]
+            SHOW_QR: [MessageHandler(filters.TEXT, show_QR)],
         },
         fallbacks=[MessageHandler(filters.TEXT, unknown)]
     )
     application.add_handler(conversation_handler)
-    application.add_handler(MessageHandler(filters.TEXT, unknown))
-    application.add_handler(PreCheckoutQueryHandler(precheckout))
-    application.add_handler(MessageHandler(
-        filters.SUCCESSFUL_PAYMENT, successful_payment))
-    application.add_error_handler(error_handler)
+
+    application.add_handler(PreCheckoutQueryHandler(precheckout)) # Payment Services
+    application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment)) # Payment Services
+    application.add_handler(MessageHandler(filters.TEXT, unknown)) # Unknown messages
+    application.add_error_handler(error_handler) # Error handling
 
     application.run_polling()
