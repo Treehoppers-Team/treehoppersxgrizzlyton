@@ -15,6 +15,9 @@ const {
   getEventRegistrationsFirebase,
   getRegistrationsFirebase,
   insertRegistrationFirebase,
+  mintNft,
+  getUserWalletFirebase,
+  getNftInfoFirebase
 } = require("./helpers/helpers");
 
 // Setup Express.js server
@@ -68,12 +71,13 @@ app.get("/getUserInfo/:user_id", (req, res) => {
 
 app.post("/uploadUserInfo", (req, res) => {
   // Extract user data from the request body
-  const { user_id, user_handle, user_name, user_contact } = req.body;
+  const { user_id, user_handle, user_name, user_contact, chat_id } = req.body;
   const userInfo = {
     user_id,
     user_handle,
     user_name,
     user_contact,
+    chat_id,
   };
   try {
     insertUserFirebase(userInfo).then(() =>
@@ -172,6 +176,18 @@ app.post("/ticketSale", (req, res) => {
   }
 });
 
+app.post("/mintNft", (req, res) => {
+  const { user_id, event_title } = req.body
+  try {
+    handleMint(user_id, event_title).then(result => {
+      console.log("/mintNft ")
+      res.status(200).json(result)
+    })
+  } catch (err) {
+    console.log("/mintNft error ", err)
+  }
+})
+
 app.post("/raffleRefund", (req, res) => {
   const { user_id, amount, transaction_type, timestamp, event_title } = req.body;
   const userBalanceObject = { user_id, amount, transaction_type };
@@ -212,6 +228,20 @@ app.post('/uploadMetadata', (req, res) => {
   })
   .catch((err) => console.log(err));
 })
+
+const handleMint = async(userId, eventTitle) => {
+  const walletKeys = await getUserWalletFirebase(userId)
+  const userKeypair = Keypair.fromSecretKey(walletKeys.privateKey)
+
+  const nftInfo = await getNftInfoFirebase(eventTitle)
+  console.log("Nft Info: ", nftInfo)
+
+  const { merchantKey, title, symbol, uri } = nftInfo[0]
+  const creatorKey = new PublicKey(merchantKey)
+
+  const mintTransaction = await mintNft(userKeypair, creatorKey, title, symbol, uri)
+  return mintTransaction
+}
 
 // Start the Express.js web server
 app.listen(port, () => console.log(`Express.js API listening on port ${port}`));

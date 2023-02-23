@@ -20,10 +20,10 @@ from sys import platform
 load_dotenv()
 
 # Environment Variables
-# TELE_TOKEN_TEST = "5756526738:AAFw_S43pkP1rQV1vw0WVsNil_xrV25aWAc"
-# PROVIDER_TOKEN = "284685063:TEST:NWI0MWExMzZjNmMw"
-TELE_TOKEN_TEST = os.getenv("TELE_TOKEN_TEST")
-PROVIDER_TOKEN = os.getenv("PROVIDER_TOKEN")
+TELE_TOKEN_TEST = "5756526738:AAFw_S43pkP1rQV1vw0WVsNil_xrV25aWAc"
+PROVIDER_TOKEN = "284685063:TEST:YTFkN2IzNmI1MWUz"
+# TELE_TOKEN_TEST = os.getenv("TELE_TOKEN_TEST")
+# PROVIDER_TOKEN = os.getenv("PROVIDER_TOKEN")
 
 # Logging
 logging.basicConfig(
@@ -350,6 +350,7 @@ async def register_new_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'user_handle': user_handle,
         'user_name': user_name,
         'user_contact': user_contact,
+        'chat_id' : update.effective_chat.id
     }
     logger.info(f'Saving records of new user {user_id}')
 
