@@ -3,7 +3,7 @@ import { Inter } from "@next/font/google";
 import styles from "@/styles/Home.module.css";
 import Card from "@/components/card";
 import { useEffect, useState } from "react";
-import BasicStatistics from "@/components/stats";
+import BasicStatistics from "@/components/basicStats";
 import { Box, Skeleton, SkeletonText } from "@chakra-ui/react";
 
 const inter = Inter({ subsets: ["latin"] });
