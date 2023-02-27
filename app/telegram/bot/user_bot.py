@@ -33,7 +33,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Global Variables
-endpoint_url = "http://localhost:3000"
+endpoint_url = os.getenv("PORT", "http://localhost:3000")
+
 
 ROUTE, NEW_USER, PROCEED_PAYMENT, TITLE, VERIFY_BALANCE, SHOW_QR = range(6)
 
