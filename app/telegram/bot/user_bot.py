@@ -24,6 +24,8 @@ load_dotenv()
 # PROVIDER_TOKEN = "284685063:TEST:YTFkN2IzNmI1MWUz"
 TELE_TOKEN_TEST = os.getenv("TELE_TOKEN_TEST")
 PROVIDER_TOKEN = os.getenv("PROVIDER_TOKEN")
+endpoint_url = os.getenv("ENDPOINT_URL", "http://localhost:3000")
+PORT = int(os.environ.get('PORT', 5000))
 
 # Logging
 logging.basicConfig(
@@ -32,8 +34,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Global Variables
-endpoint_url = os.getenv("PORT", "http://localhost:3000")
 
 
 ROUTE, NEW_USER, PROCEED_PAYMENT, TITLE, VERIFY_BALANCE, SHOW_QR = range(6)
@@ -672,4 +672,11 @@ if __name__ == '__main__':
     application.add_handler(MessageHandler(filters.TEXT, unknown)) # Unknown messages
     application.add_error_handler(error_handler) # Error handling
 
-    application.run_polling()
+    if os.getenv("ENDPOINT_URL"):
+        application.run_webhook(listen="0.0.0.0",
+                            port=int(PORT),
+                            url_path=TELE_TOKEN_TEST,
+                            webhook_url='https://treehopper-bot.onrender.com/' + TELE_TOKEN_TEST)
+        
+    else:
+        application.run_polling()
