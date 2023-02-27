@@ -677,6 +677,8 @@ if __name__ == '__main__':
                             port=int(PORT),
                             url_path=TELE_TOKEN_TEST,
                             webhook_url=os.getenv("ENDPOINT_URL") + TELE_TOKEN_TEST)
+        logger.info("Application running via webhook: ", TELE_TOKEN_TEST)
         
     else:
         application.run_polling()
+        logger.info("Application running via polling")
