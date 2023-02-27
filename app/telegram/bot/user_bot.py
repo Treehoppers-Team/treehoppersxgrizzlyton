@@ -96,10 +96,10 @@ async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
     logger.error(msg="Exception while handling an update:", exc_info=context.error)
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="Sorry, an unexpected error occurred \n"
-        "Please try again later")
+    # await context.bot.send_message(
+    #     chat_id=update.effective_chat.id,
+    #     text="Sorry, an unexpected error occurred \n"
+    #     "Please try again later")
     return ConversationHandler.END
 
 """"
