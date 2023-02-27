@@ -676,7 +676,7 @@ if __name__ == '__main__':
         application.run_webhook(listen="0.0.0.0",
                             port=int(PORT),
                             url_path=TELE_TOKEN_TEST,
-                            webhook_url='https://treehopper-bot.onrender.com/' + TELE_TOKEN_TEST)
+                            webhook_url=os.getenv("ENDPOINT_URL") + TELE_TOKEN_TEST)
         
     else:
         application.run_polling()
