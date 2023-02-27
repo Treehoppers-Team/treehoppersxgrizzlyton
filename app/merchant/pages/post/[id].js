@@ -85,18 +85,6 @@ const Content = () => {
     return data;
   }
 
-  // async function getEventStats(eventId) {
-  //   const res = await fetch(
-  //     `http://localhost:3000/getEventStats/${eventId}`
-  //   )
-  //   const data = await res.json();
-  //   const totalRegistered = data["Total Registered"]
-  //   const attendance = data["Attendance"]
-  //   const result = [totalRegistered, attendance]
-  //   console.log(result)
-  //   return data;
-  // }
-
   async function getUserInfo(userId) {
     const res = await fetch(`http://localhost:3000/getUserInfo/${userId}`);
     const data = await res.json();
@@ -133,6 +121,15 @@ const Content = () => {
 
   return (
     <div className="flex flex-col justify-center">
+      <div className="flex flex-wrap justify-center">
+            {/* Current stats: Number of users registered, number of redeemed attandance, and total dollar value when sold */}
+            <EventStats events={{
+              "Total Registered": users.length,
+              "Total Successful": users.filter(user => user.status === "SUCCESFUL").length + "/"+ users.length,
+              "Total Redeemed": users.filter(user => user.status === "REDEEMED").length + "/"+ users.length,
+              "Revenue": "$" +users.length * event.price,
+            }} />
+      </div>
       <div className="flex flex-wrap justify-start">
         {!loading ? (
           <Event
@@ -152,11 +149,7 @@ const Content = () => {
           <h1 className="mt-4 font-bold text-3xl text-center">
             Interested Users
           </h1>
-          <div className="flex flex-wrap justify-center">
-            <EventStats events={[users.length,users.filter(user => user.status === "SUCCESSFUL").length, users.length * event.price]} />
-            {/* <EventStats events={getEventStats(event.title)} /> */}
-
-          </div>
+          
           <div className="flex flex-wrap justify-center">
             {users.map((user, index) => {
               return (
