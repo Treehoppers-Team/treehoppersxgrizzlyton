@@ -5,6 +5,7 @@ import EventStats from "../../components/eventStats";
 import { useEffect, useState } from "react";
 import { Box, Skeleton, SkeletonText } from "@chakra-ui/react";
 import QrReader from 'react-qr-scanner';
+import axios from "axios";
 
 // const TELEGRAM_TOKEN = process.env.NEXT_PUBLIC_TEST_TOKEN
 const TELEGRAM_TOKEN = "5756526738:AAFw_S43pkP1rQV1vw0WVsNil_xrV25aWAc"
@@ -48,12 +49,27 @@ const Content = () => {
           console.log(res)
         })
 
+        const data = {
+          user_id: parsedData.userId,
+          event_title: parsedData.eventTitle,
+          status: "REDEEMED"
+        };
+  
+        axios
+          .post("http://localhost:3000/updateRegistration", data)
+          .then((response) => {
+            console.log(response.data);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+
         getUserInfo(parsedData.userId).then((res) => {
           setResult({
             name: res.name,
             userId: parsedData.userId,
             eventTitle: parsedData.eventTitle,
-            status: parsedData.status,
+            status: res.status,
             chat_id: parsedData.chatId
           });
         })
@@ -125,9 +141,9 @@ const Content = () => {
             {/* Current stats: Number of users registered, number of redeemed attandance, and total dollar value when sold */}
             <EventStats events={{
               "Total Registered": users.length,
-              "Total Successful": users.filter(user => user.status === "SUCCESFUL").length + "/"+ users.length,
+              // "Total Successful": users.filter(user => user.status === "SUCCESSFUL").length + "/"+ users.length,
               "Total Redeemed": users.filter(user => user.status === "REDEEMED").length + "/"+ users.length,
-              "Revenue": "$" +users.length * event.price,
+              "Revenue": "$" + users.filter(user => user.status === "REDEEMED").length * event.price,
             }} />
       </div>
       <div className="flex flex-wrap justify-start">
