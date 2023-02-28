@@ -36,6 +36,36 @@ const Content = () => {
     }
   };
 
+  const downloadCSV = () => {
+    const csvRows = [];
+    
+    // Create the headers for the CSV file
+    const headers = ['name', 'handle', 'contact', 'status']
+    csvRows.push(headers.join(','));
+    
+    // Create a row for each user
+    for (const user of users) {
+      const values = headers.map(header => user[header]);
+      csvRows.push(values.join(','));
+    }
+    
+    // Combine all rows into a single string
+    const csvData = csvRows.join('\n');
+    
+    // Create a link to download the CSV file
+    const link = document.createElement('a');
+    link.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvData));
+    link.setAttribute('download', 'users.csv');
+    document.body.appendChild(link);
+    
+    // Click the link to download the CSV file
+    link.click();
+    
+    // Remove the link from the DOM
+    document.body.removeChild(link);
+  };
+  
+
   const handleScan = (data) => {
     console.log("scanning");
     if (data) {
@@ -145,24 +175,6 @@ const Content = () => {
     });
   }, []);
 
-  // const tableDataTest = [
-  //   {
-  //     username: "JohnDoe",
-  //     number: 123456,
-  //     status: "active",
-  //   },
-  //   {
-  //     username: "JaneDoe",
-  //     number: 789012,
-  //     status: "inactive",
-  //   },
-  //   {
-  //     username: "BobSmith",
-  //     number: 345678,
-  //     status: "active",
-  //   },
-  // ];
-
   const tableData = users.map((user) => {
     return {
       name: user.name,
@@ -220,6 +232,12 @@ const Content = () => {
               className="flex flex-wrap w-1/6 items-center mx-1 text-white bg-green-500 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center"
             >
               {scan ? "Close Scanner" : "Open Scanner"}
+            </button>
+            <button
+              onClick={downloadCSV}
+              className="flex flex-wrap w-1/6 items-center mx-1 text-white bg-yellow-500 hover:bg-yellow-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center"
+            >
+              Download CSV
             </button>
           </div>
 
