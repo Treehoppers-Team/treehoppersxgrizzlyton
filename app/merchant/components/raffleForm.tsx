@@ -43,7 +43,7 @@ const RaffleForm = ({
   }
 
   const pinataMetadataUpload = async (data: any) => {
-    const res = await fetch("http://localhost:3000/uploadMetadata", {
+    const res = await fetch("https://treehoppers-mynt-backend.onrender.com/uploadMetadata", {
       method: "POST",
       headers: {
         Accept: "application/json, text/plain, */*",
@@ -122,7 +122,7 @@ const RaffleForm = ({
       };
 
       axios
-        .post("http://localhost:3000/updateRegistration", data)
+        .post("https://treehoppers-mynt-backend.onrender.com/updateRegistration", data)
         .then((response: { data: any }) => {
           console.log(response.data);
         })
@@ -141,7 +141,7 @@ const RaffleForm = ({
       };
 
       axios
-        .post("http://localhost:3000/raffleRefund", transaction)
+        .post("https://treehoppers-mynt-backend.onrender.com/raffleRefund", transaction)
         .then((response: { data: any }) => {
           console.log(response.data);
         })
@@ -158,7 +158,7 @@ const RaffleForm = ({
       };
 
       axios
-        .post("http://localhost:3000/updateRegistration", data)
+        .post("https://treehoppers-mynt-backend.onrender.com/updateRegistration", data)
         .then(() => axios.post("http://localhost:3000/mintNft", data))
         .then((response) => {
           // insert telegram notificiation for user upon successful mint

@@ -122,7 +122,7 @@ const Content = () => {
   };
 
   async function getEvents() {
-    const res = await fetch("http://localhost:3000/viewEvents");
+    const res = await fetch("https://treehoppers-mynt-backend.onrender.com/viewEvents");
     const data = await res.json();
 
     return data;
@@ -130,7 +130,7 @@ const Content = () => {
 
   async function getRegistrations(eventId) {
     const res = await fetch(
-      `http://localhost:3000/getEventRegistrations/${eventId}`
+      `https://treehoppers-mynt-backend.onrender.com/getEventRegistrations/${eventId}`
     );
     const data = await res.json();
 
@@ -138,7 +138,7 @@ const Content = () => {
   }
 
   async function getUserInfo(userId) {
-    const res = await fetch(`http://localhost:3000/getUserInfo/${userId}`);
+    const res = await fetch(`https://treehoppers-mynt-backend.onrender.com/getUserInfo/${userId}`);
     const data = await res.json();
 
     return data;
