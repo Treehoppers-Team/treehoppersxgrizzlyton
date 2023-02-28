@@ -24,7 +24,8 @@ load_dotenv()
 # PROVIDER_TOKEN = "284685063:TEST:YTFkN2IzNmI1MWUz"
 TELE_TOKEN_TEST = os.getenv("TELE_TOKEN_TEST")
 PROVIDER_TOKEN = os.getenv("PROVIDER_TOKEN")
-endpoint_url = os.getenv("ENDPOINT_URL", "http://localhost:3000")
+endpoint_url = os.getenv("BACKEND_ENDPOINT", "http://localhost:3000")
+webhook_url = os.getenv("WEBHOOK_URL")
 PORT = int(os.environ.get('PORT', 5000))
 
 # Logging
@@ -672,11 +673,11 @@ if __name__ == '__main__':
     application.add_handler(MessageHandler(filters.TEXT, unknown)) # Unknown messages
     application.add_error_handler(error_handler) # Error handling
 
-    if os.getenv("ENDPOINT_URL"):
+    if os.getenv("WEBHOOK_URL"):
         application.run_webhook(listen="0.0.0.0",
                             port=int(PORT),
                             url_path=TELE_TOKEN_TEST,
-                            webhook_url=os.getenv("ENDPOINT_URL") + TELE_TOKEN_TEST)
+                            webhook_url=os.getenv("WEBHOOK_URL") + TELE_TOKEN_TEST)
         logger.info("Application running via webhook: ", TELE_TOKEN_TEST)
         
     else:
