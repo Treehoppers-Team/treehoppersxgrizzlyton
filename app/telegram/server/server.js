@@ -14,6 +14,7 @@ const {
   getEventsFirebase,
   getEventRegistrationsFirebase,
   getRegistrationsFirebase,
+  getAllRegistrationsFirebase,
   insertRegistrationFirebase,
   mintNft,
   getUserWalletFirebase,
@@ -140,6 +141,15 @@ app.get("/getRegistrations/:user_id", (req, res) => {
   const user_id = req.params.user_id;
   try {
     getRegistrationsFirebase(user_id).then((result) => res.send(result));
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+app.get("/getAllRegistrations", (req, res) => {
+  const user_id = req.params.user_id;
+  try {
+    getAllRegistrationsFirebase(user_id).then((result) => res.send(result));
   } catch (err) {
     console.log(err);
   }

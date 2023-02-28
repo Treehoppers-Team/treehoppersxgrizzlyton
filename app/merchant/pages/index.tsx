@@ -11,6 +11,8 @@ const inter = Inter({ subsets: ["latin"] });
 export default function Home() {
   const [loading, setLoading] = useState<boolean>(true);
   const [events, setEvents] = useState<any>({});
+  const [users, setUsers] = useState<any>({});
+
 
   let cards: JSX.Element[] = [];
 
@@ -62,12 +64,24 @@ export default function Home() {
     setLoading(false);
     return data;
   }
+  async function getAllRegistrations() {
+    const res = await fetch(
+      `https://treehoppers-mynt-backend.onrender.com/getAllRegistrations`
+    );
+    const data = await res.json();
+    return data;
+  }
 
   useEffect(() => {
     getEvents().then((res) => {
       console.log(res);
       console.log(loading);
       setEvents(res);
+    });
+    getAllRegistrations().then((res) => {
+      console.log(res);
+      console.log(loading);
+      setUsers(res);
     });
   }, []);
 
@@ -81,7 +95,16 @@ export default function Home() {
       </Head>
 
       <main>
-        <BasicStatistics events={loading == false ? events.length : 0} />
+        {/* <BasicStatistics events={loading == false ? events.length : 0} /> */}
+        <BasicStatistics events ={{
+              "Total Events": events.length,
+              "NFTs Minted": 
+                "5", // Need to deal with loading hook properly before rendering this component
+                // users.filter((user: { status: string; }) => user.status === "SUCCESSFUL").length,
+              "Revenue":
+                "$" +
+                "PLACEHOLDER",
+            }} />
         {loading == false ? (
           cardSection(generateCards(events))
         ) : ( cardSection(generateLoadingCards(loadingCards))

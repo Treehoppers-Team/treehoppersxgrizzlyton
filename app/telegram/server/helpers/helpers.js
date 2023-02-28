@@ -213,6 +213,21 @@ module.exports = {
     return registrationInfos;
   },
 
+  getAllRegistrationsFirebase: async () => {
+    const registrationRef = collection(db, "registrations");
+    // UserId needs to be converted from number to string prior to the check
+    const filter = query(
+      registrationRef
+    );
+    const querySnapshot = await getDocs(filter);
+    const registrationInfos = [];
+    querySnapshot.forEach((doc) => {
+      const registrationData = doc.data();
+      registrationInfos.push(registrationData);
+    });
+    return registrationInfos;
+  },
+
   insertRegistrationFirebase: async (registrationInfo) => {
     docData = {
       // Inserting as a string bc user_id in user collection is string as well
