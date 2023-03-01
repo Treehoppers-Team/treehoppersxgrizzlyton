@@ -160,6 +160,7 @@ const Content = () => {
                 userData.push({
                   id: res2[i].userId,
                   status: res2[i].status,
+                  mint_account: res2[i].mint_account,
                   ...data[i],
                 });
               }
@@ -182,6 +183,7 @@ const Content = () => {
       handle: user.handle,
       number: user.contact,
       status: user.status,
+      mint_account: user.mint_account
     };
   });
 

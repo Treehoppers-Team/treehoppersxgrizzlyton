@@ -28,7 +28,7 @@ const fs = require("fs");
 const { PublicKey, Keypair } = require("@solana/web3.js");
 const pinataSDK = require("@pinata/sdk");
 const JWT =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJjODA1MzJhMC01YmU2LTQyZTItYmRlNS1hMTkwYWZkMzNkZjkiLCJlbWFpbCI6ImFkdmFpdC5iaGFyYXQuZGVzaHBhbmRlQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImlkIjoiRlJBMSIsImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxfSx7ImlkIjoiTllDMSIsImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxfV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiJhMTkyMTNjOGE4YzM1MGNiMjMwMCIsInNjb3BlZEtleVNlY3JldCI6IjA1YjcwMTY0OWEzMGUxOWY5NDE1MzY2OWE4MDNiYjczZGY4MTU5ODIxM2ZiNzlmM2MyYzk3MGViOWQyMjFlNmUiLCJpYXQiOjE2NzUzNzI0MjF9.mmLYahJJ-etF5u_sRdOyJ2irM7F848vMaJ_Z9rK2G0A";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJmNzI2MjYxNS1kZjc5LTRmOGYtOTc2My1hOGFiMGIwZDJiMzQiLCJlbWFpbCI6ImF0ZDEyNDEyNUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJpZCI6IkZSQTEiLCJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MX0seyJpZCI6Ik5ZQzEiLCJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MX1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiNjU5M2FiOTZiMTQwMWVjNTdlNzEiLCJzY29wZWRLZXlTZWNyZXQiOiIxNmI5YzIxZDQ5OGY5NDkzM2ViZTRjMDJhNTk4MTM0Y2FiMjc0Njg2ZTVhZDc3NzVhNGVmZDNiNWY3NTRmYWQ0IiwiaWF0IjoxNjc3NjkxMTM5fQ.idBrYxK2i5f6w8pggFFZ-8ac8YadEYKC4sgeIMxvt9o";
 const pinata = new pinataSDK({ pinataJWTKey: JWT });
 app.use(bodyParser.json());
 app.use((req, res, next) => {
@@ -126,8 +126,8 @@ app.get("/getEventRegistrations/:event_title", (req, res) => {
 });
 
 app.post("/updateRegistration", (req, res) => {
-  const { user_id, event_title, status } = req.body
-  const registrationInfo = { user_id, event_title, status}
+  const { user_id, event_title, status, mint_account } = req.body
+  const registrationInfo = { user_id, event_title, status, mint_account}
   try {
     updateRegistrationFirebase(registrationInfo).then(() => {
       res.status(200).json({ message: `${registrationInfo.user_id} status successfully updated to ${registrationInfo.status}` })

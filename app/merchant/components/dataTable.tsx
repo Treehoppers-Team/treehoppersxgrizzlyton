@@ -5,6 +5,7 @@ interface TableRow {
   handle: string;
   number: number;
   status: "SUCCESSFUL" | "REDEEMED" | "UNSUCCESSFUL" | "PENDING";
+  mint_account: string;
 }
 
 interface TableProps {
@@ -46,6 +47,10 @@ const Table: React.FC<TableProps> = ({ data }) => {
               Name{" "}
               {sortColumn === "name" && (sortDirection === "asc" ? "▲" : "▼")}
             </th>
+            <th className="px-4 py-2" onClick={() => handleSort("status")}>
+              Status{" "}
+              {sortColumn === "status" && (sortDirection === "asc" ? "▲" : "▼")}
+            </th>
             <th className="px-4 py-2" onClick={() => handleSort("handle")}>
               Handle{" "}
               {sortColumn === "handle" && (sortDirection === "asc" ? "▲" : "▼")}
@@ -54,8 +59,9 @@ const Table: React.FC<TableProps> = ({ data }) => {
               Number{" "}
               {sortColumn === "number" && (sortDirection === "asc" ? "▲" : "▼")}
             </th>
+
             <th className="px-4 py-2" onClick={() => handleSort("status")}>
-              Status{" "}
+              NFT{" "}
               {sortColumn === "status" && (sortDirection === "asc" ? "▲" : "▼")}
             </th>
           </tr>
@@ -65,16 +71,6 @@ const Table: React.FC<TableProps> = ({ data }) => {
             <tr key={index}>
               <td className="border px-4 py-2">{index + 1}</td>
               <td className="border px-4 py-2">{row.name}</td>
-              <td className="border px-4 py-2">
-                <a
-                  href={`https://t.me/${row.handle}`}
-                  className="font-light hover:text-blue-500"
-                >
-                  @{row.handle}
-                </a>
-              </td>
-              
-              <td className="border px-4 py-2"><a className="font-light hover:text-blue-500" href={`tel:{row.number}`}>{row.number}</a></td>
               <td className="border px-4 py-2">
                 <span
                   className={`${
@@ -91,6 +87,50 @@ const Table: React.FC<TableProps> = ({ data }) => {
                 >
                   {row.status}
                 </span>
+              </td>
+              <td className="border px-4 py-2">
+                <a
+                  href={`https://t.me/${row.handle}`}
+                  className="font-light hover:text-blue-500"
+                >
+                  @{row.handle}
+                </a>
+              </td>
+
+              <td className="border px-4 py-2">
+                <a
+                  className="font-light hover:text-blue-500"
+                  href={`tel:{row.number}`}
+                >
+                  {row.number}
+                </a>
+              </td>
+
+              <td className="border px-4 py-2">
+                <a>
+                  {row.mint_account ? (
+                    <a
+                      href={`https://solana.fm/address/${row.mint_account}/metadata?cluster=devnet-qn1`}
+                      className="flex flex-wrap font-light hover:text-blue-500"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        className="w-6 h-6 mr-1"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"
+                        />
+                      </svg>
+                      Ticket Link
+                    </a>
+                  ) : null}
+                </a>
               </td>
             </tr>
           ))}

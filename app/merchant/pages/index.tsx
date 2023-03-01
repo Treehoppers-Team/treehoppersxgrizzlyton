@@ -9,7 +9,7 @@ const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 export default function Home() {
   const [loading, setLoading] = useState<boolean>(true);
   const [events, setEvents] = useState<any>({});
-  const [users, setUsers] = useState<any>({});
+  const [users, setUsers] = useState([]);
 
 
   let cards: JSX.Element[] = [];
@@ -91,12 +91,12 @@ export default function Home() {
         {/* <BasicStatistics events={loading == false ? events.length : 0} /> */}
         <BasicStatistics events ={{
               "Total Events": events.length,
-              "NFTs Minted": 
-                "5", // Need to deal with loading hook properly before rendering this component
-                // users.filter((user: { status: string; }) => user.status === "SUCCESSFUL").length,
-              "Revenue":
-                "$" +
-                "PLACEHOLDER",
+              "NFTs Minted": users ? String(users.filter((user: { status: string; }) => user.status === "SUCCESSFUL").length) : String(0),
+                // "5", // Need to deal with loading hook properly before rendering this component
+                
+              // "Revenue":
+              //   "$" +
+              //   "PLACEHOLDER",
             }} />
         {loading == false ? (
           cardSection(generateCards(events))

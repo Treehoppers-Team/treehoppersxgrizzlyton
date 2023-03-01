@@ -47,7 +47,8 @@ const firebaseConfig = {
 };
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
-const CUSTOM_DEVNET_RPC = "https://rpc-devnet.helius.xyz/?api-key=d4ccf997-d0f7-4112-b129-93196d6a2742";
+const CUSTOM_DEVNET_RPC = "https://api.devnet.solana.com";
+// const CUSTOM_DEVNET_RPC = "https://rpc-devnet.helius.xyz/?api-key=d4ccf997-d0f7-4112-b129-93196d6a2742";
 
 // Firebase Methods
 module.exports = {
@@ -245,6 +246,7 @@ module.exports = {
       userId: registrationInfo.user_id.toString(),
       eventTitle: registrationInfo.event_title,
       status: registrationInfo.status,
+      mint_account: registrationInfo.mint_account,
     };
     
     const docId = docData.userId + docData.eventTitle;
@@ -252,7 +254,8 @@ module.exports = {
 
     // updating the status of the registration after raffle
     await updateDoc(docRef,{
-      status: docData.status
+      status: docData.status,
+      mint_account: docData.mint_account
     })
     // await setDoc(doc(db, "registrations", docId.toString()), docData);
   },

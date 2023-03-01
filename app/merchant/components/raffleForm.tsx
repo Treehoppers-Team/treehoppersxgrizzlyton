@@ -152,6 +152,8 @@ const RaffleForm = ({
         });
     }
 
+    let counter = 0;
+
     for (let i = 0; i < winners.length; i++) {
       const data = {
         user_id: winners[i].id,
@@ -161,25 +163,54 @@ const RaffleForm = ({
 
       console.log("updating winners")
 
-      axios
-        .post(BASE + "/updateRegistration", data)
-        .then(() => axios.post(BASE + "/mintNft", data).then((response) => {
-          // insert telegram notificiation for user upon successful mint
-          console.log("sending telegram notif")
-          const ticketLink = `https://solana.fm/address/${response.data.mintAccount}/metadata?cluster=devnet-qn1`;
-          const message = `Congratulations! You have won a ticket to ${eventName2}! Please visit ${ticketLink} to view your ticket.`;
-          const telegramPush = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${winners[i].chat_id}&text=${message}`;
-          fetch(telegramPush).then((res) => {
-            console.log(res);
-          });
-          console.log(response.data.mintAccount);
-          console.log("finished conducting raffle")
+      axios.post(BASE + "/mintNFT", data).then((response: { data: any }) => {
+        console.log(response.data.mintAccount);
+        const ticketLink = `https://solana.fm/address/${response.data.mintAccount}/metadata?cluster=devnet-qn1`;
+        const message = `Congratulations! You have won a ticket to ${eventName2}! Please visit ${ticketLink} to view your ticket.`;
+        const telegramPush = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${winners[i].chat_id}&text=${message}`;
+        fetch(telegramPush).then((res) => {
+          console.log(res);
+        }).then(() => {
+          const registrationData = {
+            user_id: winners[i].id,
+            event_title: eventName2,
+            status: "SUCCESSFUL",
+            mint_account: response.data.mintAccount,
+          };
+          axios.post(BASE + "/updateRegistration", registrationData).then((response: { data: any }) => {
+            console.log(response.data);
+            counter += 1;
+          }).then(() => {
+            if (counter === winners.length) {
+              console.log("raffle conducted")
+              setLoading(false);
+              
+              window.location.reload();
+              
+            }
+          })
         })
-        .catch((error: any) => {
-          console.log(error);
-        }))
+      })
 
+      // axios.post(BASE + "/updateRegistration", data)
+      //   .then((response: { data: any }) => {
+      //     console.log(response.data);
+      //   }).then(() => {
+      //     axios.post(BASE + "/mintNft", data).then((response: { data: any }) => {
+      //       console.log(response.data.mintAccount);
+      //       const ticketLink = `https://solana.fm/address/${response.data.mintAccount}/metadata?cluster=devnet-qn1`;
+      //       const message = `Congratulations! You have won a ticket to ${eventName2}! Please visit ${ticketLink} to view your ticket.`;
+      //       const telegramPush = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${winners[i].chat_id}&text=${message}`;
+      //       fetch(telegramPush).then((res) => {
+      //         console.log(res);
+      //       })
+      //     })
+      //   })
     }
+
+
+    
+    
   }
 
   function handleClick() {
@@ -222,7 +253,7 @@ const RaffleForm = ({
             },
             image!
           );
-          conductRaffle();
+          
         });
       });
   }
@@ -244,9 +275,10 @@ const RaffleForm = ({
       const dbInstance = doc(database, "/nfts", title + dateTime2);
       setDoc(dbInstance, data).then(() => {
         console.log("finished uploading event nft data");
-        window.location.reload();
+        conductRaffle()
       });
     }
+    
   };
 
   return (
