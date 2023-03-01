@@ -92,6 +92,7 @@ const Content = () => {
           user_id: parsedData.userId,
           event_title: parsedData.eventTitle,
           status: "REDEEMED",
+          mint_account: user.mint_account
         };
 
         axios
