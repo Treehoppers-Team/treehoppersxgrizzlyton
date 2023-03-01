@@ -54,27 +54,23 @@ export default function Home() {
   // then map the events to the card component
 
   async function getEvents() {
-    const res = await fetch(BASE + "/viewEvents");
+    const res = await fetch("http://localhost:3000" + "/viewEvents");
     const data = await res.json();
-    setLoading(false);
     return data;
   }
   async function getAllRegistrations() {
-    const res = await fetch(BASE + `/getAllRegistrations`);
+    const res = await fetch("http://localhost:3000" + `/getAllRegistrations`);
     const data = await res.json();
     return data;
   }
 
   useEffect(() => {
-    getEvents().then((res) => {
-      console.log(res);
-      console.log(loading);
-      setEvents(res);
-    });
-    getAllRegistrations().then((res) => {
-      console.log(res);
-      console.log(loading);
-      setUsers(res);
+    Promise.all([getEvents(), getAllRegistrations()]).then(([eventsRes, usersRes]) => {
+      console.log(eventsRes);
+      console.log(usersRes);
+      setEvents(eventsRes);
+      setUsers(usersRes);
+      setLoading(false);
     });
   }, []);
 
@@ -92,11 +88,10 @@ export default function Home() {
         <BasicStatistics events ={{
               "Total Events": events.length,
               "NFTs Minted": 
-                "5", // Need to deal with loading hook properly before rendering this component
-                // users.filter((user: { status: string; }) => user.status === "SUCCESSFUL").length,
+                users.filter((user: { status: string; }) => user.status === "SUCCESSFUL").length,
               "Revenue":
                 "$" +
-                "PLACEHOLDER",
+                users.filter((user: { status: string; }) => user.status === "SUCCESSFUL").length*10,
             }} />
         {loading == false ? (
           cardSection(generateCards(events))
