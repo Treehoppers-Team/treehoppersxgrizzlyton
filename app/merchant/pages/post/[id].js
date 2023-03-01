@@ -95,7 +95,7 @@ const Content = () => {
         };
 
         axios
-          .post("http://localhost:3000/updateRegistration", data)
+          .post(BASE + "/updateRegistration", data)
           .then((response) => {
             console.log(response.data);
           })
