@@ -54,12 +54,12 @@ export default function Home() {
   // then map the events to the card component
 
   async function getEvents() {
-    const res = await fetch("http://localhost:3000" + "/viewEvents");
+    const res = await fetch(BASE + "/viewEvents");
     const data = await res.json();
     return data;
   }
   async function getAllRegistrations() {
-    const res = await fetch("http://localhost:3000" + `/getAllRegistrations`);
+    const res = await fetch(BASE + `/getAllRegistrations`);
     const data = await res.json();
     return data;
   }
