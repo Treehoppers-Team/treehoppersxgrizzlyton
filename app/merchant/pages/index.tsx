@@ -6,8 +6,8 @@ import { useEffect, useState } from "react";
 import BasicStatistics from "@/components/basicStats";
 import { Box, Skeleton, SkeletonText } from "@chakra-ui/react";
 
-const inter = Inter({ subsets: ["latin"] });
-
+const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+console.log(BASE);
 export default function Home() {
   const [loading, setLoading] = useState<boolean>(true);
   const [events, setEvents] = useState<any>({});
@@ -42,32 +42,27 @@ export default function Home() {
   let loadingCards: JSX.Element[] = [];
   const generateLoadingCards = (body: any) => {
     for (let i = 0; i < 4; i++) {
-      loadingCards.push(          <Box margin={4} padding="2" boxShadow="lg" bg="white" width={80}>
-      <Skeleton height={48}/>
-      <SkeletonText
-        mt="4"
-        noOfLines={8}
-        spacing="4"
-        skeletonHeight="4"
-      />
-    </Box>)
+      loadingCards.push(
+        <Box key={i} margin={4} padding="2" boxShadow="lg" bg="white" width={80}>
+          <Skeleton height={48} />
+          <SkeletonText mt="4" noOfLines={8} spacing="4" skeletonHeight="4" />
+        </Box>
+      );
     }
     return loadingCards;
-  }
+  };
 
   // make an api call to /viewEvents to get all the events created by the merchant
   // then map the events to the card component
 
   async function getEvents() {
-    const res = await fetch("http://localhost:3000/viewEvents");
+    const res = await fetch(BASE + "/viewEvents");
     const data = await res.json();
     setLoading(false);
     return data;
   }
   async function getAllRegistrations() {
-    const res = await fetch(
-      `https://treehoppers-mynt-backend.onrender.com/getAllRegistrations`
-    );
+    const res = await fetch(BASE + `/getAllRegistrations`);
     const data = await res.json();
     return data;
   }

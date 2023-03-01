@@ -9,7 +9,8 @@ import axios from "axios";
 import Table from "../../components/dataTable";
 
 // const TELEGRAM_TOKEN = process.env.NEXT_PUBLIC_TEST_TOKEN
-const TELEGRAM_TOKEN = "5295691143:AAEfVz97dITMg_CqbpG4ZsYtYtKb5SN_Q0I";
+const TELEGRAM_TOKEN = process.env.NEXT_PUBLIC_TELEGRAM_BOT;
+const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const Content = () => {
   const router = useRouter();
@@ -123,15 +124,14 @@ const Content = () => {
   };
 
   async function getEvents() {
-    const res = await fetch("https://treehoppers-mynt-backend.onrender.com/viewEvents");
+    const res = await fetch(BASE + "/viewEvents");
     const data = await res.json();
 
     return data;
   }
 
   async function getRegistrations(eventId) {
-    const res = await fetch(
-      `https://treehoppers-mynt-backend.onrender.com/getEventRegistrations/${eventId}`
+    const res = await fetch(BASE + `/getEventRegistrations/${eventId}`
     );
     const data = await res.json();
 
@@ -139,7 +139,7 @@ const Content = () => {
   }
 
   async function getUserInfo(userId) {
-    const res = await fetch(`https://treehoppers-mynt-backend.onrender.com/getUserInfo/${userId}`);
+    const res = await fetch(BASE + `/getUserInfo/${userId}`);
     const data = await res.json();
 
     return data;

@@ -233,19 +233,22 @@ export default function Card({
               <ModalCloseButton />
               <ModalBody>
                 <div className="flex flex-wrap justify-center m-2">
-                <App callback={callback} />
+                  <App callback={callback} />
                 </div>
-                {address.length > 0 ?                 <RaffleForm
-                  eventName2={title}
-                  description2={description}
-                  price2={price}
-                  dateTime2={time}
-                  venue2={venue}
-                  capacity2={capacity}
-                  users={users}
-                  address={address}
-                /> : <h1>Connect your Wallet to Conduct the Raffle!</h1>}
-
+                {address.length > 0 ? (
+                  <RaffleForm
+                    eventName2={title}
+                    description2={description}
+                    price2={price}
+                    dateTime2={time}
+                    venue2={venue}
+                    capacity2={capacity}
+                    users={users}
+                    address={address}
+                  />
+                ) : (
+                  <h1>Connect your Wallet to Conduct the Raffle!</h1>
+                )}
               </ModalBody>
 
               <ModalFooter>

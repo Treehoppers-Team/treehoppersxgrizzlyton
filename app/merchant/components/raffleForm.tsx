@@ -9,8 +9,9 @@ import { Box, Skeleton, SkeletonText, Spinner, Center } from "@chakra-ui/react";
 //   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJjODA1MzJhMC01YmU2LTQyZTItYmRlNS1hMTkwYWZkMzNkZjkiLCJlbWFpbCI6ImFkdmFpdC5iaGFyYXQuZGVzaHBhbmRlQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImlkIjoiRlJBMSIsImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxfSx7ImlkIjoiTllDMSIsImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxfV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiJhMTkyMTNjOGE4YzM1MGNiMjMwMCIsInNjb3BlZEtleVNlY3JldCI6IjA1YjcwMTY0OWEzMGUxOWY5NDE1MzY2OWE4MDNiYjczZGY4MTU5ODIxM2ZiNzlmM2MyYzk3MGViOWQyMjFlNmUiLCJpYXQiOjE2NzUzNzI0MjF9.mmLYahJJ-etF5u_sRdOyJ2irM7F848vMaJ_Z9rK2G0A";
 // const TELEGRAM_TOKEN = "5756526738:AAFw_S43pkP1rQV1vw0WVsNil_xrV25aWAc";
 
-const JWT = process.env.PINATA_JWT;
-const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT;
+const JWT = process.env.NEXT_PUBLIC_PINATA_JWT;
+const TELEGRAM_TOKEN = process.env.NEXT_PUBLIC_TELEGRAM_BOT;
+const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 interface EventFormProps {
   eventName2: string;
@@ -43,7 +44,7 @@ const RaffleForm = ({
   }
 
   const pinataMetadataUpload = async (data: any) => {
-    const res = await fetch("https://treehoppers-mynt-backend.onrender.com/uploadMetadata", {
+    const res = await fetch(BASE + "/uploadMetadata", {
       method: "POST",
       headers: {
         Accept: "application/json, text/plain, */*",
@@ -122,7 +123,7 @@ const RaffleForm = ({
       };
 
       axios
-        .post("https://treehoppers-mynt-backend.onrender.com/updateRegistration", data)
+        .post(BASE + "/updateRegistration", data)
         .then((response: { data: any }) => {
           console.log(response.data);
         })
@@ -141,7 +142,7 @@ const RaffleForm = ({
       };
 
       axios
-        .post("https://treehoppers-mynt-backend.onrender.com/raffleRefund", transaction)
+        .post(BASE + "/raffleRefund", transaction)
         .then((response: { data: any }) => {
           console.log(response.data);
         })
@@ -158,8 +159,8 @@ const RaffleForm = ({
       };
 
       axios
-        .post("https://treehoppers-mynt-backend.onrender.com/updateRegistration", data)
-        .then(() => axios.post("http://localhost:3000/mintNft", data))
+        .post(BASE + "/updateRegistration", data)
+        .then(() => axios.post(BASE + "/mintNft", data))
         .then((response) => {
           // insert telegram notificiation for user upon successful mint
           const ticketLink = `https://solana.fm/address/${response.data.mintAccount}/metadata?cluster=devnet-qn1`;

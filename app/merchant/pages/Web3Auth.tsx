@@ -19,7 +19,7 @@ import { useEffect, useState } from "react";
 
 import RPC from "./api/solanaRPC";
 
-const clientId = "BLcEFyEx2d1tloesFeDnFSQBPHOInsrxf1zmqKsQQkjO8cTckM0fz-rdkrzSOEBhXmJzyacUvdbf6XLMMTphjIQ"
+const clientId = process.env.NEXT_PUBLIC_WEB3AUTH_CLIENT_ID as string
 interface AppProps {
   callback: (address: string[]) => void;
 }
@@ -37,7 +37,7 @@ function App({ callback }: AppProps) {
           clientId,
           chainConfig: {
             chainNamespace: CHAIN_NAMESPACES.SOLANA,
-            chainId: "0x1", // Please use 0x1 for Mainnet, 0x2 for Testnet, 0x3 for Devnet
+            chainId: "0x3", // Please use 0x1 for Mainnet, 0x2 for Testnet, 0x3 for Devnet
             rpcTarget: "https://rpc.ankr.com/solana", // This is the public RPC we have added, please pass on your own endpoint while creating an app
           },
           web3AuthNetwork: "cyan",
@@ -190,7 +190,7 @@ function App({ callback }: AppProps) {
     <>
       <button
         onClick={onOpen}
-        className="text-white h-16 bg-[#00C48A] hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm px-5 py-2.5 text-center"
+        className="text-white h-16 bg-[#00C48A] rounded-lg hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm px-5 py-2.5 text-center"
       >
         Manage Wallet
       </button>
@@ -264,7 +264,7 @@ function App({ callback }: AppProps) {
 
   const unloggedInView = (
     <button
-      className="text-white h-16 bg-[#00C48A] hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm px-5 py-2.5 text-center"
+      className="text-white h-16 bg-[#00C48A] rounded-lg hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium text-sm px-5 py-2.5 text-center"
       onClick={login}
     >
       Login
