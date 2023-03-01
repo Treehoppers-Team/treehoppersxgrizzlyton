@@ -19,7 +19,7 @@ import Link from "next/link";
 interface CardProps {
   title: string;
   description: string;
-  price: string;
+  price: number;
   time: string;
   venue: string;
   capacity: string;
