@@ -165,6 +165,7 @@ const RaffleForm = ({
         .post(BASE + "/updateRegistration", data)
         .then(() => axios.post(BASE + "/mintNft", data).then((response) => {
           // insert telegram notificiation for user upon successful mint
+          console.log("sending telegram notif")
           const ticketLink = `https://solana.fm/address/${response.data.mintAccount}/metadata?cluster=devnet-qn1`;
           const message = `Congratulations! You have won a ticket to ${eventName2}! Please visit ${ticketLink} to view your ticket.`;
           const telegramPush = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${winners[i].chat_id}&text=${message}`;
