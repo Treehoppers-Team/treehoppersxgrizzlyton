@@ -47,7 +47,7 @@ const firebaseConfig = {
 };
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
-const CUSTOM_DEVNET_RPC = "https://solana-devnet.g.alchemy.com/v2/3G5jrH0s66-ueZNp9clzqeoDwvylCa_4";
+const CUSTOM_DEVNET_RPC = "https://rpc-devnet.helius.xyz/?api-key=d4ccf997-d0f7-4112-b129-93196d6a2742";
 
 // Firebase Methods
 module.exports = {

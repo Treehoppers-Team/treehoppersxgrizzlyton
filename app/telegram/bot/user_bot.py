@@ -84,15 +84,21 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text('Thank you for visiting the ticketing bot')
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id, 
+        text="Thank you for visiting the Mynt Ticketing Bot"
+    )
     return ConversationHandler.END
 
 
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="Sorry, I didn't understand that command."
+    await send_default_message(
+        update, 
+        context, 
+        "Sorry, I didn't understand that command. \n"
+        "Use /start to head back to the main menu"
     )
+    return ConversationHandler.END
 
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -288,7 +294,9 @@ async def show_QR(update: Update, context: ContextTypes.DEFAULT_TYPE):
     qr_information = registered_events[ticket]
     qr_information_str = json.dumps(qr_information)
 
-    await update.message.reply_text(f'Show this QR code to redeem your ticket for {ticket}. This QR code belongs to {username}')
+    await update.message.reply_text(
+        f'Show this QR code to redeem your ticket for {ticket}. This QR code belongs to {username}'
+    )
     url = pyqrcode.create(qr_information_str)
     url.png(f'./qr_codes/{user_id}.png', scale=6)
     await update.message.reply_photo(f'./qr_codes/{user_id}.png')
@@ -300,7 +308,12 @@ async def show_QR(update: Update, context: ContextTypes.DEFAULT_TYPE):
         picture_path = current_path + f'/qr_codes/{user_id}.png'
     # print(f'Your current path is {picture_path}')
     os.remove(picture_path)
-    return ConversationHandler.END
+    await send_default_message(
+        update, 
+        context, 
+        "Head back the the menu if your redemption was successful"
+    )
+    return ROUTE
 
 """"
 =============================================================================================
@@ -657,6 +670,8 @@ if __name__ == '__main__':
                 CallbackQueryHandler(register_for_event, pattern="^register_for_event$"),
                 CallbackQueryHandler(redeem, pattern="^redeem$"),
                 CallbackQueryHandler(start, pattern="^start$"),
+                CommandHandler('start', start),
+                CommandHandler('cancel', cancel),
             },
             NEW_USER: [MessageHandler(filters.Regex('^([A-Za-z ]+): ([0-9A-Za-z.+-]+)$'), register_new_user)],
             PROCEED_PAYMENT: [MessageHandler(filters.Regex('^(10|50|100)$'), proceed_payment)],
