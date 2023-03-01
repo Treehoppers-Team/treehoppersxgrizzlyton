@@ -301,17 +301,17 @@ async def show_QR(update: Update, context: ContextTypes.DEFAULT_TYPE):
     url.png(f'./qr_codes/{user_id}.png', scale=6)
     await update.message.reply_photo(f'./qr_codes/{user_id}.png')
     # add code to delete photo as well
-    current_path = os.getcwd()
-    if platform != 'darwin':  # windows
-        picture_path = current_path + f'\qr_codes\{user_id}.png'
-    else:  # mac or linux
-        picture_path = current_path + f'/qr_codes/{user_id}.png'
-    # print(f'Your current path is {picture_path}')
-    os.remove(picture_path)
+    # current_path = os.getcwd()
+    # if platform != 'darwin':  # windows
+    #     picture_path = current_path + f'\qr_codes\{user_id}.png'
+    # else:  # mac or linux
+    #     picture_path = current_path + f'/qr_codes/{user_id}.png'
+    # # print(f'Your current path is {picture_path}')
+    # os.remove(picture_path)
     await send_default_message(
         update, 
         context, 
-        "Head back the the menu if your redemption was successful"
+        "Head back the the menu if your verification was successful"
     )
     return ROUTE
 

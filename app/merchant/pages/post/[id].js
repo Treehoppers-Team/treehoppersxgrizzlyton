@@ -79,9 +79,10 @@ const Content = () => {
 
       if (parsedData.eventTitle === event.title && user) {
         alert("Verified!");
+        const text = "You have been successfully verified! Please enter the event venue :)"
         const chat_id = parsedData.chatId;
         console.log(chat_id);
-        const telegramPush = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${chat_id}&text=Verified`;
+        const telegramPush = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage?chat_id=${chat_id}&text=${text}`;
         fetch(telegramPush).then((res) => {
           console.log(res);
         });
