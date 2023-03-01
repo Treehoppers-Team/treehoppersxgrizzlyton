@@ -9,7 +9,7 @@ import axios from "axios";
 import Table from "../../components/dataTable";
 
 // const TELEGRAM_TOKEN = process.env.NEXT_PUBLIC_TEST_TOKEN
-const TELEGRAM_TOKEN = "5756526738:AAFw_S43pkP1rQV1vw0WVsNil_xrV25aWAc";
+const TELEGRAM_TOKEN = "5295691143:AAEfVz97dITMg_CqbpG4ZsYtYtKb5SN_Q0I";
 
 const Content = () => {
   const router = useRouter();
