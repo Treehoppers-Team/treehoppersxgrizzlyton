@@ -246,17 +246,24 @@ module.exports = {
       userId: registrationInfo.user_id.toString(),
       eventTitle: registrationInfo.event_title,
       status: registrationInfo.status,
-      mint_account: registrationInfo.mint_account,
+      mint_account: registrationInfo.mint_account ? registrationInfo.mint_account : null,
     };
     
     const docId = docData.userId + docData.eventTitle;
     const docRef = doc(db, "registrations", docId.toString());
 
     // updating the status of the registration after raffle
-    await updateDoc(docRef,{
-      status: docData.status,
-      mint_account: docData.mint_account
-    })
+    if (registrationInfo.mintAccount) {
+      await updateDoc(docRef, {
+        status: docData.status,
+        mint_account: docData.mint_account
+      });
+    } else {
+      await updateDoc(docRef, {
+        status: docData.status,
+      });
+    }
+
     // await setDoc(doc(db, "registrations", docId.toString()), docData);
   },
 
