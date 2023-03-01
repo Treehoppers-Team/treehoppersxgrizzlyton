@@ -108,6 +108,7 @@ const RaffleForm = ({
   }
 
   async function conductRaffle() {
+    console.log("conducting raffle")
     const amount = parseInt(capacity2);
     const winners = raffleSelect(users, amount);
     const losers = users.filter((x) => !winners.includes(x));
@@ -158,10 +159,11 @@ const RaffleForm = ({
         status: "SUCCESSFUL",
       };
 
+      console.log("updating winners")
+
       axios
         .post(BASE + "/updateRegistration", data)
-        .then(() => axios.post(BASE + "/mintNft", data))
-        .then((response) => {
+        .then(() => axios.post(BASE + "/mintNft", data).then((response) => {
           // insert telegram notificiation for user upon successful mint
           const ticketLink = `https://solana.fm/address/${response.data.mintAccount}/metadata?cluster=devnet-qn1`;
           const message = `Congratulations! You have won a ticket to ${eventName2}! Please visit ${ticketLink} to view your ticket.`;
@@ -170,10 +172,12 @@ const RaffleForm = ({
             console.log(res);
           });
           console.log(response.data.mintAccount);
+          console.log("finished conducting raffle")
         })
         .catch((error: any) => {
           console.log(error);
-        });
+        }))
+
     }
   }
 
@@ -233,12 +237,13 @@ const RaffleForm = ({
       | undefined,
     image: File
   ) => {
+    console.log("uploading event nft data")
     if (data) {
       const title = data.title + "-nft";
       const dbInstance = doc(database, "/nfts", title + dateTime2);
       setDoc(dbInstance, data).then(() => {
+        console.log("finished uploading event nft data");
         window.location.reload();
-        console.log("uploaded form data");
       });
     }
   };

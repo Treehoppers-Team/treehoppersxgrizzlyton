@@ -5,7 +5,7 @@ import BasicStatistics from "@/components/basicStats";
 import { Box, Skeleton, SkeletonText } from "@chakra-ui/react";
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-console.log(BASE);
+
 export default function Home() {
   const [loading, setLoading] = useState<boolean>(true);
   const [events, setEvents] = useState<any>({});
