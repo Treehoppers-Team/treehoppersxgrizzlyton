@@ -20,10 +20,13 @@ from sys import platform
 load_dotenv()
 
 # Environment Variables
-# TELE_TOKEN_TEST = "5756526738:AAFw_S43pkP1rQV1vw0WVsNil_xrV25aWAc"
-# PROVIDER_TOKEN = "284685063:TEST:YTFkN2IzNmI1MWUz"
-TELE_TOKEN_TEST = os.getenv("TELE_TOKEN_TEST")
-PROVIDER_TOKEN = os.getenv("PROVIDER_TOKEN")
+TELE_TOKEN_TEST = "5993830475:AAGtB7So2uI5DFiCnHG9shErdqg7XNIxsBw"
+PROVIDER_TOKEN = "284685063:TEST:OTk4YTFhYjFmOTli"
+endpoint_url = "https://treehoppers-mynt-backend-o8kz.onrender.com"
+
+
+# TELE_TOKEN_TEST = os.getenv("TELE_TOKEN_TEST")
+# PROVIDER_TOKEN = os.getenv("PROVIDER_TOKEN")
 endpoint_url = os.getenv("BACKEND_ENDPOINT", "http://localhost:3000")
 webhook_url = os.getenv("WEBHOOK_URL")
 PORT = int(os.environ.get('PORT', 5000))

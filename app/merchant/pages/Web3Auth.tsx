@@ -12,10 +12,17 @@ import { CHAIN_NAMESPACES, SafeEventEmitterProvider } from "@web3auth/base";
 import { Web3Auth } from "@web3auth/modal";
 import { SlopeAdapter } from "@web3auth/slope-adapter";
 // Plugins
-import { SolanaWalletConnectorPlugin } from "@web3auth/solana-wallet-connector-plugin";
+
 // Adapters
 import { SolflareAdapter } from "@web3auth/solflare-adapter";
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+
+let SolanaWalletConnectorPlugin: new (arg0: { torusWalletOpts: {}; walletInitOptions: { whiteLabel: { name: string; theme: { isDark: boolean; colors: { torusBrand1: string; }; }; logoDark: string; logoLight: string; topupHide: boolean; defaultLanguage: string; }; enableLogging: boolean; }; }) => any;
+
+if (typeof window !== "undefined") {
+  SolanaWalletConnectorPlugin = require("@web3auth/solana-wallet-connector-plugin").SolanaWalletConnectorPlugin;
+}
 
 import RPC from "./api/solanaRPC";
 
