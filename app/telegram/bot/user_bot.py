@@ -19,14 +19,9 @@ from sys import platform
 
 load_dotenv()
 
-# Environment Variables
-TELE_TOKEN_TEST = "5993830475:AAGtB7So2uI5DFiCnHG9shErdqg7XNIxsBw"
-PROVIDER_TOKEN = "284685063:TEST:OTk4YTFhYjFmOTli"
-endpoint_url = "https://treehoppers-mynt-backend-o8kz.onrender.com"
 
-
-# TELE_TOKEN_TEST = os.getenv("TELE_TOKEN_TEST")
-# PROVIDER_TOKEN = os.getenv("PROVIDER_TOKEN")
+TELE_TOKEN_TEST = os.getenv("TELE_TOKEN_TEST")
+PROVIDER_TOKEN = os.getenv("PROVIDER_TOKEN")
 endpoint_url = os.getenv("BACKEND_ENDPOINT", "http://localhost:3000")
 webhook_url = os.getenv("WEBHOOK_URL")
 PORT = int(os.environ.get('PORT', 5000))
@@ -40,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 
-ROUTE, NEW_USER, PROCEED_PAYMENT, TITLE, VERIFY_BALANCE, SHOW_QR = range(6)
+ROUTE, NEW_USER, SHOW_QR = range(3)
 
 """
 =============================================================================================
@@ -126,7 +121,7 @@ async def wallet_options(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     keyboard = [
         [InlineKeyboardButton("View Wallet Balance",callback_data="view_wallet_balance"),],
-        [InlineKeyboardButton("View Transaction History",callback_data="view_transaction_history"),],
+        [InlineKeyboardButton("View Transaction History",callback_data="view_transaction_history_1"),],
         [InlineKeyboardButton("Top Up Wallet", callback_data="top_up_wallet"),],
         [InlineKeyboardButton("< Back", callback_data="start"),],
     ]
@@ -164,7 +159,7 @@ async def send_default_message(update, context: ContextTypes.DEFAULT_TYPE, text)
     )
     
     
-async def update_default_message(update, text):
+async def update_default_message(update, context: ContextTypes.DEFAULT_TYPE, text):
     keyboard = [[InlineKeyboardButton("< Back to Menu", callback_data="start"),],]
     reply_markup = InlineKeyboardMarkup(keyboard)
     query = update.callback_query
@@ -195,7 +190,7 @@ async def view_wallet_balance(update: Update, context: ContextTypes.DEFAULT_TYPE
     user_balance = response_data['balance']
 
     text=f'Your wallet balance is ${user_balance}'
-    await update_default_message(update, text)
+    await update_default_message(update, context, text)
     return ROUTE
 
 def format_txn_history(response_data):
@@ -216,14 +211,46 @@ def format_txn_history(response_data):
         text = "You have no prior transactions"
     return text
     
-async def view_transaction_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = await get_user_id_from_query(update)
+async def view_transaction_history(update: Update, context: CallbackContext):
+    query = update.callback_query
+    await query.answer()
+    user_id = query.from_user.id
+    
     logger.info(f"Retrieving transaction history for User: {user_id}")
     response = requests.get(endpoint_url + f"/viewTransactionHistory/{user_id}")
     response_data = response.json()
-    text = format_txn_history(response_data)
 
-    await update_default_message(update, text)
+    # Reverse the order of the response_data list to show latest transactions first
+    response_data.reverse()
+
+    # Get the current page number from user_data, default to page 1
+    page_num = int(query.data.split("_")[-1])
+    context.user_data['page_num'] = page_num
+
+    # Calculate the starting and ending index of transactions to display
+    num_per_page = 3
+    start_idx = (page_num - 1) * num_per_page
+    end_idx = start_idx + num_per_page
+
+    # Slice the transactions to display only the ones for the current page
+    transactions = response_data[start_idx:end_idx]
+
+    # Format the transactions as text
+    text = format_txn_history(transactions)
+
+    # Create the inline keyboard for pagination
+    keyboard = [[InlineKeyboardButton("< Back to Menu", callback_data="start"),],]
+    if start_idx > 0:
+        # Add "Previous" button if not on the first page
+        keyboard.append([InlineKeyboardButton("Previous", callback_data=f"view_transaction_history_{page_num-1}")])
+    if end_idx < len(response_data):
+        # Add "Next" button if not on the last page
+        keyboard.append([InlineKeyboardButton("Next", callback_data=f"view_transaction_history_{page_num+1}")])
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    # Send the message with pagination and update user_data with the current page number
+    await query.edit_message_text(text=text, reply_markup=reply_markup)
+
     return ROUTE
 
 """"
@@ -335,17 +362,15 @@ async def top_up_wallet(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = await get_user_id_from_query(update)
     context.user_data["new_user"] = await is_new_user(user_id)
     if context.user_data["new_user"] == True:
-        text='Please input your name and contact number in this format `name : contact`'
-        await update_default_message(update, text)
+        text=("To help us process your top-up, please provide your full name and "
+              "your contact in the following format: 'John : 81818181'. \n"
+              "This information is only required for your first top-up.")
+        await update_default_message(update, context, text)
         return NEW_USER
 
     else:
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text="Proceeding with existing user"
-        )
         await get_topup_amount(update, context)
-        return PROCEED_PAYMENT
+        return ROUTE
 
 
 async def is_new_user(user_id):
@@ -376,29 +401,37 @@ async def register_new_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if response.status_code == 200:
         await update.message.reply_text('Successfully saved your contact info')
         await get_topup_amount(update, context)
-        print("register_new_user -> get_topup_amount")
-        return PROCEED_PAYMENT
+        return ROUTE
     else:
         await update.message.reply_text('An unexpected error occurred')
         return ConversationHandler.END
 
 
 async def get_topup_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    reply_keyboard = [["10", "50", "100"]]
+    keyboard = [
+        [InlineKeyboardButton("< Back to Menu", callback_data="start"),],
+        [
+            InlineKeyboardButton("$10", callback_data="top_up_10"),
+            InlineKeyboardButton("$50", callback_data="top_up_50"),
+            InlineKeyboardButton("$100", callback_data="top_up_100"),
+        ],
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
     await context.bot.send_message(
-        text="How much would you like to top up?\n"
-             "Please select either $10/50/100",
-        chat_id=update.effective_chat.id, 
-        reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard, one_time_keyboard=True,
-        )
-    )
+        chat_id=update.effective_chat.id,
+        text="Please select an amount to top up your Mynt Wallet",
+        reply_markup=reply_markup, 
+    ) 
 
 
 async def proceed_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    topup_amount = int(update.message.text)
-    context.user_data["toptop_amount"] = topup_amount
-    await update.message.reply_text(f'The top up amount is {topup_amount}')
+    query = update.callback_query
+    await query.answer()    
+    
+    callback_data = update.callback_query.data[7:] ## (top_up_xx) The amount starts from 7th index
+    topup_amount = int(callback_data)
+    context.user_data["topup_amount"] = topup_amount
+
     await context.bot.send_invoice(
         chat_id=update.effective_chat.id,
         title=f"Top up Wallet",
@@ -425,7 +458,7 @@ async def precheckout(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def successful_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Confirms the successful payment."""
     user_id = update.message.from_user.id
-    topup_amount = context.user_data["toptop_amount"]
+    topup_amount = context.user_data["topup_amount"]
     logger.info(f'{user_id} has successfully topped up {topup_amount}')
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     data = {
@@ -478,7 +511,7 @@ async def view_events(update: Update, context: ContextTypes.DEFAULT_TYPE):
     response = requests.get(endpoint_url + "/viewEvents")
     response_data = response.json()
     text = format_event_data(response_data)
-    await update_default_message(update, text)
+    await update_default_message(update, context, text)
     return ROUTE
 
 def format_registration_data(response_data):
@@ -501,7 +534,7 @@ async def check_registration(update: Update, context: ContextTypes.DEFAULT_TYPE)
     response = requests.get(endpoint_url + f"/getRegistrations/{user_id}")
     response_data = response.json()
     text=format_registration_data(response_data)
-    await update_default_message(update, text)
+    await update_default_message(update, context, text)
     return ROUTE
 
     
@@ -513,10 +546,12 @@ async def register_for_event(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Create mapping of event titles and their prices
     events_dict = {}
+    keyboard = [[InlineKeyboardButton("< Back", callback_data="start")]]
     for event in response_data:
         title = event['title']
         price = event['price']
         events_dict[title] = price
+        keyboard.append([InlineKeyboardButton(title, callback_data=f"title_{title}")])
     context.user_data["events_dict"] = events_dict
     event_title_list = events_dict.keys()
     logger.info(f"Existing Event titles: {event_title_list}")
@@ -526,15 +561,11 @@ async def register_for_event(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return ROUTE
     
     else:
-        reply_keyboard = [[title for title in event_title_list]]
-        await context.bot.send_message(
+        await query.edit_message_text(
             text="Please select which event you would like to register for",
-            chat_id=update.effective_chat.id, 
-            reply_markup=ReplyKeyboardMarkup(
-                reply_keyboard, one_time_keyboard=True,
-            )
+            reply_markup=InlineKeyboardMarkup(keyboard)
         )
-        return TITLE
+        return ROUTE
 
 
 def get_previous_registrations(user_id, event_title):
@@ -556,14 +587,19 @@ def get_previous_registrations(user_id, event_title):
 
 
 async def validate_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    event_title = update.message.text
+    query = update.callback_query
+    await query.answer()   
+    
+    callback_data = update.callback_query.data ## (title_xx) The title starts from 5th index
+    event_title = callback_data[6:]
     context.user_data["event_title"] = event_title
-    user_id = update.message.from_user.id
+    
+    user_id = query.from_user.id
     double_registration = get_previous_registrations(user_id, event_title)
     if double_registration:
         text=("You have already registered for this event. \n"
             "You cannot register for the same event again.")
-        await send_default_message(update, context, text)
+        await update_default_message(update, context, text)
         return ROUTE
     
     else:
@@ -571,28 +607,27 @@ async def validate_registration(update: Update, context: ContextTypes.DEFAULT_TY
         events_dict = context.user_data["events_dict"]
         event_price = events_dict[event_title]
         context.user_data["event_price"] = event_price
-        reply_keyboard = [["Yes", "No"]]
-        await update.message.reply_text(
-            f'Do you wish to make a payment of ${event_price} for the event using your Mynt Wallet?\n'
+        keyboard = [
+            [InlineKeyboardButton("< Back", callback_data="start")],
+            [
+                InlineKeyboardButton("Yes", callback_data="verify_balance"),
+            ]
+        ]
+        await query.edit_message_text(
+            text=f'Do you wish to make a payment of ${event_price} for the event using your Mynt Wallet?\n'
             "Reply with Yes to confirm payment",
-            reply_markup=ReplyKeyboardMarkup(
-                reply_keyboard, one_time_keyboard=True,
-            )
+            reply_markup=InlineKeyboardMarkup(keyboard)
         )
-        return VERIFY_BALANCE
+        return ROUTE
 
 
 async def verify_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    payment_confirmation = update.message.text
-    # User does not wish to proceed with making payment
-    if payment_confirmation == "No":
-        text=('You have declined to make a payment for the event ticket \n'
-            'We hope to see you again')
-        await send_default_message(update, context, text)
-        return ROUTE
+    query = update.callback_query
+    await query.answer()  
 
     # Verify user has sufficient balance in in-app wallet
-    user_id = update.message.from_user.id
+    user_id = query.from_user.id
+    context.user_data["user_id"] = user_id
     logger.info(f"Verifying balance for user {user_id}")
     response = requests.get(endpoint_url + f"/viewWalletBalance/{user_id}")
     response_data = response.json()
@@ -604,7 +639,7 @@ async def verify_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text=(f"You have insufficient balance in your wallet \n"
             f"Your current balance is ${user_balance} but the ticket price is ${event_price} \n"
             "Please top up your Mynt wallet!")
-        await send_default_message(update, context, text)
+        await update_default_message(update, context, text)
         return ROUTE
 
     # User has sufficient balance
@@ -615,7 +650,7 @@ async def verify_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def complete_purchase(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
+    user_id = context.user_data["user_id"]
     event_price = context.user_data["event_price"]
     event_title = context.user_data["event_title"]
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -629,13 +664,19 @@ async def complete_purchase(update: Update, context: ContextTypes.DEFAULT_TYPE):
     response = requests.post(endpoint_url + "/ticketSale", json=data)
     logger.info("Saving payment records")
     if response.status_code == 200:
-        await update.message.reply_text(f"Your wallet balance has been updated successfully")
+        await context.bot.send_message(
+            text=f"Your wallet balance has been updated successfully",
+            chat_id=update.effective_chat.id
+        )
     else:
-        await update.message.reply_text("Sorry, something went wrong when updating your wallet balance")
+        await context.bot.send_message(
+            text=f"Sorry, something went wrong when updating your wallet balance",
+            chat_id=update.effective_chat.id
+        )
 
 
 async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
+    user_id = context.user_data["user_id"]
     event_title = context.user_data["event_title"]
     logger.info(f'{user_id} has successfully registered for {event_title}')
     data = {
@@ -645,7 +686,11 @@ async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TY
     }
     response = requests.post(endpoint_url + "/insertRegistration", json=data)
     if response.status_code == 200:
-        text=f"You have successfully registered for {event_title}!"
+        text=(f"You have successfully registered for {event_title}. \n"
+        "Please note that your registration does not guarantee a ticket, as we will be "
+        "conducting a raffle to randomly select the winners. \n"
+        "We will notify you of the outcome via message. \n"
+        "Thank you for your interest and we hope to see you at the event!")
         await send_default_message(update, context, text)
         return ROUTE
     else:
@@ -663,23 +708,25 @@ if __name__ == '__main__':
         ],
         states={
             ROUTE: {
+                CallbackQueryHandler(start, pattern="^start$"),
                 CallbackQueryHandler(wallet_options, pattern="^wallet_options$"),
                 CallbackQueryHandler(view_wallet_balance,pattern="^view_wallet_balance$"),
-                CallbackQueryHandler(view_transaction_history, pattern="^view_transaction_history$"),
+                CallbackQueryHandler(view_transaction_history, pattern="^view_transaction_history_(.*)$"),
                 CallbackQueryHandler(top_up_wallet, pattern="^top_up_wallet$"),
+                CallbackQueryHandler(proceed_payment, pattern="^top_up_10$"),
+                CallbackQueryHandler(proceed_payment, pattern="^top_up_50$"),
+                CallbackQueryHandler(proceed_payment, pattern="^top_up_100$"),
                 CallbackQueryHandler(event_options, pattern="^event_options$"),
                 CallbackQueryHandler(view_events, pattern="^view_events$"),
                 CallbackQueryHandler(check_registration, pattern="^check_registration$"),
                 CallbackQueryHandler(register_for_event, pattern="^register_for_event$"),
+                CallbackQueryHandler(validate_registration, pattern="^title_(.*)$"), ## Can handle any callback pattern,
+                CallbackQueryHandler(verify_balance, pattern="^verify_balance$"),
                 CallbackQueryHandler(redeem, pattern="^redeem$"),
-                CallbackQueryHandler(start, pattern="^start$"),
                 CommandHandler('start', start),
                 CommandHandler('cancel', cancel),
             },
             NEW_USER: [MessageHandler(filters.Regex('^([A-Za-z ]+): ([0-9A-Za-z.+-]+)$'), register_new_user)],
-            PROCEED_PAYMENT: [MessageHandler(filters.Regex('^(10|50|100)$'), proceed_payment)],
-            TITLE: [MessageHandler(filters.TEXT, validate_registration)],
-            VERIFY_BALANCE: [MessageHandler(filters.Regex('^(Yes|No)$'), verify_balance)],
             SHOW_QR: [MessageHandler(filters.TEXT, show_QR)],
         },
         fallbacks=[MessageHandler(filters.TEXT, unknown)]
