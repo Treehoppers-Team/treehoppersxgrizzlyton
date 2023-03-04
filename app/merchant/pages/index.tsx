@@ -6,10 +6,18 @@ import { Box, Skeleton, SkeletonText } from "@chakra-ui/react";
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+type User = {
+  title: string;
+  eventTitle: string;
+  mint_account: string;
+  status: string;
+  userId: string;
+};
+
 export default function Home() {
   const [loading, setLoading] = useState<boolean>(true);
   const [events, setEvents] = useState<any>({});
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
 
 
   let cards: JSX.Element[] = [];
@@ -64,6 +72,19 @@ export default function Home() {
     return data;
   }
 
+  function calculateRevenue() {
+    let totalRevenue = 0;
+    // get the users eventTitle field
+    users.forEach(user => {
+      events.forEach((event: { title: any; price: number; }) => {
+        if (event.title == user.eventTitle){
+          totalRevenue += event.price
+        }
+      })
+    })
+    return totalRevenue
+  }
+  
   useEffect(() => {
     Promise.all([getEvents(), getAllRegistrations()]).then(([eventsRes, usersRes]) => {
       console.log(eventsRes);
@@ -88,10 +109,9 @@ export default function Home() {
         <BasicStatistics events ={{
               "Total Events": events.length,
               "NFTs Minted": users ? String(users.filter((user: { status: string; }) => user.status === "SUCCESSFUL").length) : String(0),
-                // "5", // Need to deal with loading hook properly before rendering this component
-              // "Revenue":
-              //   "$" +
-              //   users.filter((user: { status: string; }) => user.status === "SUCCESSFUL").length*10,
+              "Revenue":
+                "$" +
+                calculateRevenue(),
             }} />
         {loading == false ? (
           cardSection(generateCards(events))
