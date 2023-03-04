@@ -126,8 +126,8 @@ app.get("/getEventRegistrations/:event_title", (req, res) => {
 });
 
 app.post("/updateRegistration", (req, res) => {
-  const { user_id, event_title, status, mint_account } = req.body
-  const registrationInfo = { user_id, event_title, status, mint_account}
+  const { user_id, event_title, status, mint_account, redemption_time } = req.body
+  const registrationInfo = { user_id, event_title, status, mint_account, redemption_time}
   try {
     updateRegistrationFirebase(registrationInfo).then(() => {
       res.status(200).json({ message: `${registrationInfo.user_id} status successfully updated to ${registrationInfo.status}` })

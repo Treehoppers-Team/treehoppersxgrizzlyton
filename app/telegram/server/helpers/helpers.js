@@ -247,7 +247,8 @@ module.exports = {
       userId: registrationInfo.user_id.toString(),
       eventTitle: registrationInfo.event_title,
       status: registrationInfo.status,
-      mint_account: registrationInfo.mint_account
+      mint_account: registrationInfo.mint_account,
+      redemption_time: redemption_time
     };
     
     const docId = docData.userId + docData.eventTitle;

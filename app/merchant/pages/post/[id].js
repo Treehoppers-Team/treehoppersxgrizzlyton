@@ -87,12 +87,14 @@ const Content = () => {
         fetch(telegramPush).then((res) => {
           console.log(res);
         });
-
+        const currentTime = new Date();
+        const redemptionTime = currentTime.toISOString();
         const data = {
           user_id: parsedData.userId,
           event_title: parsedData.eventTitle,
           status: "REDEEMED",
-          mint_account: user.mint_account
+          mint_account: user.mint_account,
+          redemption_time:  redemptionTime,
         };
 
         axios
