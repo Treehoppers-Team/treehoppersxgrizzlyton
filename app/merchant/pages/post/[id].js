@@ -162,6 +162,8 @@ const Content = () => {
                   id: res2[i].userId,
                   status: res2[i].status,
                   mint_account: res2[i].mint_account,
+                  registration_time: res2[i].registration_time,
+                  redemption_time: res2[i].redemption_time,
                   ...data[i],
                 });
               }
@@ -184,7 +186,9 @@ const Content = () => {
       handle: user.handle,
       number: user.contact,
       status: user.status,
-      mint_account: user.mint_account
+      mint_account: user.mint_account,
+      registration_time: user.registration_time,
+      redemption_time: user.redemption_time,
     };
   });
 

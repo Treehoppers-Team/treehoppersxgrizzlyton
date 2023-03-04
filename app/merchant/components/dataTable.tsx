@@ -6,6 +6,8 @@ interface TableRow {
   number: number;
   status: "SUCCESSFUL" | "REDEEMED" | "UNSUCCESSFUL" | "PENDING";
   mint_account: string;
+  registration_time: string;
+  redemption_time: string;
 }
 
 interface TableProps {
@@ -63,6 +65,16 @@ const Table: React.FC<TableProps> = ({ data }) => {
             <th className="px-4 py-2" onClick={() => handleSort("status")}>
               NFT{" "}
               {sortColumn === "status" && (sortDirection === "asc" ? "▲" : "▼")}
+            </th>
+
+            <th className="px-4 py-2" onClick={() => handleSort("registration_time")}>
+              Registration Time{" "}
+              {sortColumn === "registation_time" && (sortDirection === "asc" ? "▲" : "▼")}
+            </th>
+
+            <th className="px-4 py-2" onClick={() => handleSort("redemption_time")}>
+              Redemption Time{" "}
+              {sortColumn === "redemption_time" && (sortDirection === "asc" ? "▲" : "▼")}
             </th>
           </tr>
         </thead>
@@ -130,6 +142,18 @@ const Table: React.FC<TableProps> = ({ data }) => {
                       Ticket Link
                     </a>
                   ) : null}
+                </a>
+              </td>
+
+              <td className="border px-4 py-2">
+                <a>
+                  {row.redemption_time}
+                </a>
+              </td>
+              
+              <td className="border px-4 py-2">
+                <a>
+                  {row.redemption_time}
                 </a>
               </td>
             </tr>
