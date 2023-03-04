@@ -235,6 +235,7 @@ module.exports = {
       userId: registrationInfo.user_id.toString(),
       eventTitle: registrationInfo.event_title,
       status: registrationInfo.status,
+      registration_time: registrationInfo.registration_time
     };
     // Doc ID needs to be a string
     const docId = docData.userId + docData.eventTitle;

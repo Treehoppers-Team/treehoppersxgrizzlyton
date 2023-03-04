@@ -147,10 +147,10 @@ const Table: React.FC<TableProps> = ({ data }) => {
 
               <td className="border px-4 py-2">
                 <a>
-                  {row.redemption_time}
+                  {row.registration_time}
                 </a>
               </td>
-              
+
               <td className="border px-4 py-2">
                 <a>
                   {row.redemption_time}

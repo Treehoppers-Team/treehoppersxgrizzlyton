@@ -678,11 +678,13 @@ async def complete_purchase(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def complete_registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = context.user_data["user_id"]
     event_title = context.user_data["event_title"]
-    logger.info(f'{user_id} has successfully registered for {event_title}')
+    registration_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    logger.info(f'{user_id} has successfully registered for {event_title} at {registration_time}')
     data = {
         'user_id': user_id,
         'event_title': event_title,
         'status': 'PENDING',
+        'registration_time': registration_time,
     }
     response = requests.post(endpoint_url + "/insertRegistration", json=data)
     if response.status_code == 200:

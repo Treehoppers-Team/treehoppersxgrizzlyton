@@ -156,8 +156,8 @@ app.get("/getAllRegistrations", (req, res) => {
 });
 
 app.post("/insertRegistration", (req, res) => {
-  const { user_id, event_title, status } = req.body
-  const registrationInfo = { user_id, event_title, status}
+  const { user_id, event_title, status, registration_time } = req.body
+  const registrationInfo = { user_id, event_title, status, registration_time}
   try {
     insertRegistrationFirebase(registrationInfo).then(() => {
       res.status(200).json({ message: "User successfully registered for event" })
