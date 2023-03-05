@@ -6,7 +6,7 @@ import { ref, uploadBytes } from "firebase/storage";
 interface EventFormProps {
     eventName2: string;
     description2: string;
-    price2: string;
+    price2: number;
     dateTime2: string;
     venue2: string;
     capacity2: string;
@@ -24,12 +24,12 @@ const EventForm = ({eventName2,description2,price2,dateTime2,venue2,capacity2}:E
 
   function handleClick() {
     console.log(eventName, dateTime, venue, capacity, image);
-    uploadData({ title: eventName, description: description, price: price, time: dateTime, venue: venue, capacity: capacity},image!)
+    uploadData({ title: eventName, description: description, price: Number(price), time: dateTime, venue: venue, capacity: capacity},image!)
   }
 
   const storageRef = ref(storage, eventName + dateTime);
 
-  const uploadData = (data: { title: string; description: string; price: string; time: string; venue: string; capacity: string;} | undefined, image: File) => {
+  const uploadData = (data: { title: string; description: string; price: number; time: string; venue: string; capacity: string;} | undefined, image: File) => {
     // const dbInstance = collection(database, '/MerchantCollection');
     if (data) {
       const dbInstance = doc(database, "/events", data.title + data.time);
@@ -87,7 +87,7 @@ const EventForm = ({eventName2,description2,price2,dateTime2,venue2,capacity2}:E
           type="text"
           placeholder="Enter the registration price"
           value={price}
-          onChange={(e) => setPrice(e.target.value)}
+          onChange={(e) => setPrice(e.target.value as unknown as number)}
         />
       </div>
       <div className="mb-4">
