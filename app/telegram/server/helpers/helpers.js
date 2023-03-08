@@ -247,19 +247,27 @@ module.exports = {
       userId: registrationInfo.user_id.toString(),
       eventTitle: registrationInfo.event_title,
       status: registrationInfo.status,
-      mint_account: registrationInfo.mint_account,
-      redemption_time: redemption_time
+      mint_account: registrationInfo.mint_account
     };
+
+    // Include redemption_time only if it exists
+    if (registrationInfo.redemption_time) {
+      docData.redemption_time = registrationInfo.redemption_time;
+    }
     
     const docId = docData.userId + docData.eventTitle;
     const docRef = doc(db, "registrations", docId.toString());
 
-    await updateDoc(docRef, {
+    // Include redemption_time only if it exists
+    const updateData = {
       status: docData.status,
       mint_account: docData.mint_account
-    });
+    };
+    if (docData.redemption_time) {
+      updateData.redemption_time = docData.redemption_time;
+    }
 
-    // await setDoc(doc(db, "registrations", docId.toString()), docData);
+    await updateDoc(docRef, updateData);
   },
 
   getNftInfoFirebase: async (eventTitle) => {
