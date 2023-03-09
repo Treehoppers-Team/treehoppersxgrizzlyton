@@ -15,6 +15,7 @@ import { database } from "@/firebaseConfig";
 import { deleteDoc, doc } from "firebase/firestore";
 import Link from "next/link";
 import RaffleForm from "./raffleForm";
+import SelectForm from "./selectForm";
 import dynamic from "next/dynamic";
 
 const App = dynamic(
@@ -49,6 +50,7 @@ export default function Card({
   };
   const { isOpen: isOpenEditModal, onOpen: onOpenEditModal, onClose: onCloseEditModal } = useDisclosure();
   const { isOpen: isOpenRaffleModal, onOpen: onOpenRaffleModal, onClose: onCloseRaffleModal } = useDisclosure();
+  const { isOpen: isOpenSelectModal, onOpen: onOpenSelectModal, onClose: onCloseSelectModal } = useDisclosure();
   const [deleted, setDeleted] = useState(false);
 
   function dateFormat(dateString: string | number | Date) {
@@ -157,7 +159,7 @@ export default function Card({
                 Conduct Raffle
               </button>
               <button
-                onClick={onOpenRaffleModal}
+                onClick={onOpenSelectModal}
                 className="flex flex-wrap items-center mx-1 text-white bg-green-500 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-2.5 py-2.5 text-center"
               >
                 {/* <svg
@@ -281,6 +283,43 @@ export default function Card({
               </ModalFooter>
             </ModalContent>
           </Modal>
+
+          <Modal isOpen={isOpenSelectModal} onClose={onCloseSelectModal}>
+            <ModalOverlay />
+            <ModalContent>
+              <ModalHeader>Confirm Event NFT Data</ModalHeader>
+              <ModalCloseButton />
+              <ModalBody>
+                <div className="flex flex-wrap justify-center m-2">
+                  <App callback={callback} />
+                </div>
+                {address.length > 0 ? (
+                  <SelectForm
+                    eventName2={title}
+                    description2={description}
+                    price2={price}
+                    dateTime2={time}
+                    venue2={venue}
+                    capacity2={capacity}
+                    users={users}
+                    address={address}
+                  />
+                ) : (
+                  <h1>Connect your Wallet to Conduct the Selection!</h1>
+                )}
+              </ModalBody>
+
+              <ModalFooter>
+                <button
+                  className="w-full my-2 mx-auto text-white bg-red-500 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+                  onClick={onCloseSelectModal}
+                >
+                  Close
+                </button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
+          
         </div>
       </div>
     </>
