@@ -1,4 +1,4 @@
-# Treehoppers X MYNT
+# Treehoppers X Grizzlyton
 ## Description
 An NFT ticketing platform which allows users to mint NFTs via telegram.
 
