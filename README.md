@@ -87,8 +87,6 @@ Create a `.env` file in the **merchant** directory with the following variables:
 ```bash
 NEXT_PUBLIC_TEST_TOKEN: Telegram ID for the bot
 ```
-### Tech Stack
-Our bot uses the python-telegram-bot library for the telegram bot, ExpressJS as middleware to process user inputs, and Solana Web3js to interact with our Rust-based Contract
 
 ### Deployment
 - Contract deployed to [BgAh9RE8D5119VA1q28MxPMx77mdbYxWc7DPB5ULAB5x](https://solana.fm/address/BgAh9RE8D5119VA1q28MxPMx77mdbYxWc7DPB5ULAB5x) (Devnet)
