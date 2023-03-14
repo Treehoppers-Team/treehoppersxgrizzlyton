@@ -76,6 +76,8 @@ Why Blockchain?
 2. Custodial wallet Holding your Nft for max convenience
 3. Instant mint and confirmation
 
+There are 3 components in this repository. A python telegram bot, a express js server and a NextJS merchant app.
+
 ### Environment Variables
 Create a `.env` file in the **root** directory with the following variables:
 ```bash
@@ -83,10 +85,20 @@ TELE_TEST_TOKEN: Telegram ID for the bot
 PROVIDER_TOKEN: Stripe (test) provider token for accepting payments
 ```
 
+The Python telegram bot and the express js server can be ran concurrently in the same terminal (locally). Simply run "npm run start" in the root directory to start both the telegram bot and the express server.
+
 Create a `.env` file in the **merchant** directory with the following variables:
 ```bash
 NEXT_PUBLIC_TEST_TOKEN: Telegram ID for the bot
 ```
+
+To run the merchant application (locally):
+```bash
+cd app/merchant
+npm build
+npm run dev
+```
+This will run the merchant app on local host port 3000
 
 ### Deployment
 - Contract deployed to [BgAh9RE8D5119VA1q28MxPMx77mdbYxWc7DPB5ULAB5x](https://solana.fm/address/BgAh9RE8D5119VA1q28MxPMx77mdbYxWc7DPB5ULAB5x) (Devnet)
