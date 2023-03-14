@@ -64,10 +64,10 @@ Why Blockchain?
 </p>
 
 <ul>
-    <li>The front end for the customer facing side consists of our telegram bot built using python.</li>
+    <li>The front end for the customer facing side consists of our telegram bot built using the python-telegram-bot library.</li>
     <li>The front end for the merchant facing side was made using Next.js</li>
-    <li>Our middleware is an express JS file which contains our different endpoints which connects our front end with the backend.</li>
-    <li>Finally our backend infrastructure consists of our smart contracts deployed on Solana as well as our Firebase Application for linking the telegram ids of users to their respective wallets.</li>
+    <li>Our middleware is an ExpressJS file which contains our different endpoints which connects our front end with the backend. We also made use of Solana Web3js to interact with our Rust-based Contract</li>
+    <li>Finally our backend infrastructure consists of our smart contract deployed on Solana as well as our Firebase Application for linking the telegram ids of users to their respective wallets.</li>
 </ul>
 
 ## Overview and Installation
