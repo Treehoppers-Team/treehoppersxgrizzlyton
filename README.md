@@ -7,7 +7,7 @@ Our project aims to help Merchants with customer acquisition through the creatio
 <li>A merchant facing application, allowing them to create new coupon collections.</li>
 </ul>
 
-For a better understanding of the project, do check out our pitch deck [here](https://www.canva.com/design/DAFXJE3KDho/jDnSqSJxUaFqxMSJB15D1g/view?utm_content=DAFXJE3KDho&utm_campaign=designshare&utm_medium=link&utm_source=publishsharelink) and the demo of our application on [Youtube](https://www.youtube.com/watch?v=EzBdCXiMzFM)!
+For a better understanding of the project, do check out our pitch deck [here](https://www.canva.com/design/DAFdJDu3vMU/OlzJ0oHAaXdVBv_3yRftNQ/view?utm_content=DAFdJDu3vMU&utm_campaign=designshare&utm_medium=link&utm_source=publishsharelink)!
 
 <p align='center'>
 <img src="imgs/intro_page.png"/>
