@@ -1,4 +1,4 @@
-# Treehoppers X Grizzlyton
+# Treehoppers X Grizzlython
 ## Description
 Our project aims to help Merchants with customer acquisition through the creation of a telegram bot that enables customers to claim coupons directly on the blockchain (Solana). Our project Consists of two parts: 
 
